@@ -1,0 +1,2 @@
+# Hql
+SQL dialect

@@ -7,16 +7,16 @@
   
     keyword regex ['A'..'Z','a'..'z', '_'..'_']+ rule S;
 
-    regex KeywordToken =   "from" 
-                         | "as" 
-                         | "union" 
-                         | "all" 
-                         | "select" 
-                         | "distinct" 
-                         | "link" 
-                         | "join" 
-                         | "inner" 
-                         | "left" 
+    regex KeywordToken =   "from"
+                         | "as"
+                         | "union"
+                         | "all"
+                         | "select"
+                         | "distinct"
+                         | "link"
+                         | "join"
+                         | "inner"
+                         | "left"
                          | "right"
                          | "full"
                          | "where"
@@ -30,7 +30,7 @@
                          | "is"
                          | "not"
                          | "null"
-                         | "like"              
+                         | "like"
                          | "in"
                          | "exists"
                          | "count"
@@ -51,7 +51,7 @@
     [SpanClass(Number)]
     regex IntegerLiteral                      = Digit+;
     [SpanClass(Number)]
-    regex FloatLiteral                         = Digit* "." Digit+;    
+    regex FloatLiteral                         = Digit* "." Digit+;
     [ExplicitSpaces]
     regex DateLiteral                         =   "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit "\""
                                                 | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit "'"
@@ -81,14 +81,14 @@
     } 
 
     [SpanClass(String)]
-    token StringLiteral 
-  { 
-    | DoubleStringLiteralPart =   "\"" DoubleStringLiteralPart* "\"" 
-    | SingleStringLiteralPart = "'" SingleStringLiteralPart* "'"
-  }
+    token StringLiteral
+    { 
+      | DoubleStringLiteralPart =   "\"" DoubleStringLiteralPart* "\"" 
+      | SingleStringLiteralPart = "'" SingleStringLiteralPart* "'"
+    }
     
-    regex IdentifierStartCharacter           = LetterCharacter | "_";
-    regex IdentifierMyPartCharacters           = LetterCharacter | DecimalDigitCharacter;
+    regex IdentifierStartCharacter   = LetterCharacter | "_";
+    regex IdentifierMyPartCharacters = LetterCharacter | DecimalDigitCharacter;
 
     [ExplicitSpaces]
     syntax QualifiedIdentifierPart
@@ -106,7 +106,7 @@
     regex Delimiter = "." | "^" | "->" | "<-";
 
     [ExplicitSpaces]
-    syntax QualifiedIdentifier  = (QualifiedIdentifierPart; s Delimiter s)+; // TODO: In C# spec. it's "namespace-or-type-name". Rename it!
+    syntax QualifiedIdentifier = (QualifiedIdentifierPart; s Delimiter s)+;
 
     syntax Alias = "as"? StringAlias;
     
@@ -117,25 +117,23 @@
        
     syntax SelectStm = FromClause? SelectClause WhereClause? GroupClause? OrderClause?;
 
-    syntax SelectClause = "select" "distinct"? ColumnList;
+    syntax SelectClause = "select" "distinct"? ColumnList=(Column; ",")+;
 
-  syntax ColumnList = (Column; ",")+;
-  
-  syntax Column
-  {
-     | AllTabAllFields = "*"
-     | OneTabAllFields = QualifiedIdentifier ".*"
-     | Expression
+    syntax Column
+    {
+       | AllTabAllFields = "*"
+       | OneTabAllFields = QualifiedIdentifier ".*"
+       | Expression
        | ExpressionWithAlias = Expression Alias
-  }
+    }
   
-  syntax FromClause = "from" sm FromMixed nl;
+    syntax FromClause = "from" sm FromMixed nl;
 
-  syntax FromMixed
-  {
-    | FromComma = FromComma sm
-    | TableSource = TableSource sm
-  }
+    syntax FromMixed
+    {
+      | FromComma = FromComma sm
+      | TableSource = TableSource sm
+    }
 
     syntax FromComma = TableSource sm "," sm FromMixed;
 
@@ -195,9 +193,9 @@
       | Query          = "(" Query ")"
       | Exists         = "exists" "(" Query ")"
 
-      | IntegerLiteral = IntegerLiteral
-      | FloatLiteral   = FloatLiteral
-      | StringLiteral  = StringLiteral
+      | IntegerLiteral
+      | FloatLiteral
+      | StringLiteral
       | DateLiteral    = "#" DateLiteral
            
       | Null           = "null"
@@ -246,6 +244,6 @@
     precedence Unary:
       | Plus          = "+" Expression
       | Minus         = "-" Expression
-    }   
+    }
   }
 }

@@ -1,0 +1,312 @@
+﻿namespace Hql
+{
+  syntax module HqlSyntax
+  {
+    using Nitra.Core;
+    using Nitra.CStyleComments;
+  
+    keyword regex ['A'..'Z','a'..'z', '_'..'_']+ rule S;
+
+    regex KeywordToken =   "from" 
+                         | "as" 
+                         | "union" 
+                         | "all" 
+                         | "select" 
+                         | "distinct" 
+                         | "link" 
+                         | "join" 
+                         | "inner" 
+                         | "left" 
+                         | "right"
+                         | "full"
+                         | "where"
+                         | "on"
+                         | "group"
+                         | "order"
+                         | "asc"
+                         | "desc"
+                         | "and"
+                         | "or"
+                         | "is"
+                         | "not"
+                         | "null"
+                         | "like"              
+                         | "in"
+                         | "exists"
+                         | "count"
+                         | "having"
+                         | "top"
+                         | "case"
+                         | "when"
+                         | "then"
+                         | "else"
+                         | "end";
+  
+    [Keyword]   token Keyword   = Name=KeywordToken !IdentifierPartCharacters;
+    [Reference] token Reference = !Keyword IdentifierBody;
+    [Name]      token Name      = !Keyword IdentifierBody;
+    
+    // Literals
+    regex Digit                               = ['0'..'9'];
+    [SpanClass(Number)]
+    regex IntegerLiteral                      = Digit+;
+    [SpanClass(Number)]
+    regex FloatLiteral                         = Digit* "." Digit+;    
+    [ExplicitSpaces]
+    regex DateLiteral                         =   "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit "\""
+                                                | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit "'"
+                                                | "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit ":" Digit Digit "\""
+                                                | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit ":" Digit Digit "'" 
+                                                | "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit "\""
+                                                | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit "'";
+    
+    regex SimpleDoubleEscapeSequence          = "\\\"" | "\\\\";
+
+    regex SimpleSingleEscapeSequence          = "\\'" | "\\\\";
+    
+    regex NotAllowedDoubleStringLiteralChar   = NewLineCharacter | "\"" | "\\";
+
+    regex NotAllowedSingleStringLiteralChar   = NewLineCharacter | "'" | "\\";    
+
+    token DoubleStringLiteralPart
+    {
+      | SimpleDoubleEscapeSequenceStrPart     = SimpleDoubleEscapeSequence;
+      | DoubleStringLiteralCharacterSequence  = (!NotAllowedDoubleStringLiteralChar Any)+;
+    }
+
+    token SingleStringLiteralPart
+    {
+      | SimpleSingleEscapeSequenceStrPart    = SimpleSingleEscapeSequence;
+      | SingleStringLiteralCharacterSequence = (!NotAllowedSingleStringLiteralChar Any)+;
+    } 
+
+    [SpanClass(String)]
+    token StringLiteral 
+	{ 
+	  | DoubleStringLiteralPart =   "\"" DoubleStringLiteralPart* "\"" 
+	  | SingleStringLiteralPart = "'" SingleStringLiteralPart* "'"
+	}
+    
+    regex IdentifierStartCharacter           = LetterCharacter | "_";
+    regex IdentifierMyPartCharacters           = LetterCharacter | DecimalDigitCharacter;
+
+    //Syntax
+           
+    syntax IdName                             = IdentifierStartCharacter IdentifierMyPartCharacters*;
+    syntax IdBracketName                      = "[" (!"]" Any)+ "]";
+
+    syntax IdBody
+	{ 
+	  | IdName = IdName 
+	  | IdBracketName = IdBracketName
+	}
+
+    syntax StringAlias
+	{ 
+	   | IdBody = IdBody 
+	   | StringLiteral = StringLiteral
+	}
+    
+	regex OperatorDelimiter = "." | "^" | "->" | "<-";
+
+    [ExplicitSpaces]
+    syntax Id = (IdBody; Operator=OperatorDelimiter)+;
+
+    syntax FID
+	{ 
+	  | IdPlusBody = Id "." IdBody
+      | IdBody = IdBody
+	}
+
+    syntax Alias = "as"? StringAlias;
+    
+    [StartRule]
+    syntax Start = Query;
+
+    syntax Query 
+    {
+       | Union = Union
+       | Select = SelectStm
+    }
+    
+    syntax Union
+    {
+       | UnionEmpty = UnionEmpty 
+       | UnionAll = UnionAll
+    }
+
+    syntax UnionEmpty = Query "union" Query;
+
+    syntax UnionAll = Query "union" "all" Query;
+       
+    syntax SelectStm = FromClause? SelectClause WhereClause? GroupClause? OrderClause?;
+
+    syntax SelectClause = "select" "distinct"? ColumnList;
+
+	syntax ColumnList = (Column; ",")+;
+	
+	syntax Column
+	{
+	   | AllTabAllFields = AllTabAllFields
+	   | OneTabAllFields = OneTabAllFields
+       | ColumnSource = ColumnSource
+	}
+  
+    syntax ColumnSource
+    {
+      | Expression = Expression
+      | ExpressionWithAlias = Expression Alias
+    }
+
+    syntax AllTabAllFields = "*";
+
+    syntax OneTabAllFields = Id ".*";
+    
+	syntax FromClause = "from" sm FromMixed nl;
+
+    syntax FromMixed
+	{
+	  | FromComma = FromComma sm
+	  | TableSource = TableSource sm
+	}
+
+    syntax FromComma = TableSource sm "," sm FromMixed;
+
+    syntax TableSource
+    {
+      | Source = Source sm
+      | Join = Join
+    }
+
+    syntax Source
+    {
+      | SubQuery = SubQuery
+      | TableNameFull = TableNameFull
+    }
+
+    syntax SubQuery = "(" Query ")" sm Alias;
+
+    syntax TableNameFull = TableName = Id sm Alias = Alias?;    
+
+    syntax Join
+    {
+      | InnerJoin = InnerJoin
+      | LeftJoin = LeftJoin
+      | RightJoin = RightJoin
+      | FullJoin = FullJoin
+      | Link = Link 
+    }    
+
+    syntax Link = TableSource sm "link" sm TableNameFull;
+
+    syntax InnerJoin = LeftTableSource = TableSource sm "inner"? sm "join" sm RightTableSource = TableSource sm "on" sm LogicalExpression nl;
+    
+    syntax LeftJoin = LeftTableSource = TableSource sm "left" sm "outer"? sm "join" sm RightTableSource = TableSource sm "on" sm LogicalExpression nl;
+
+    syntax RightJoin = LeftTableSource = TableSource sm "right" sm "outer"? sm "join" sm RightTableSource = TableSource sm "on" sm LogicalExpression nl;
+  
+    syntax FullJoin = LeftTableSource = TableSource sm "full" sm "outer"? sm "join" sm RightTableSource = TableSource sm "on" sm LogicalExpression nl;
+
+    syntax WhereClause = "where" sm LogicalExpression nl;
+     
+    syntax HavingClause = "having" sm LogicalExpression nl;
+
+    syntax GroupClause = "group" "by" GroupList HavingClause = HavingClause?;
+
+    syntax OrderClause = "order" "by" OrderList;
+
+    syntax GroupList 
+    {
+      | GroupComma = Expression "," GroupList
+      | Expression = Expression
+    }
+
+    syntax OrderList
+    {
+      | OrderComma = OrderComma
+      | OrderField = OrderField
+    }
+
+    syntax OrderComma = OrderField "," OrderList;
+
+    syntax OrderField
+    {
+      | OrderAsc = OrderAsc
+      | OrderDesc = OrderDesc
+    }
+
+    syntax OrderAsc = Expression "asc"?;
+
+    syntax OrderDesc = Expression "desc";
+
+	syntax MyValues
+    {
+      | QueryExpression  = "(" Query ")"
+      | BracketsExpression = "(" (Expression; "," sm)+ ")"
+    }       
+
+    syntax LogicalExpression    
+    {
+      | Braces          = "(" LogicalExpression ")"
+
+      precedence Or:
+      | Or           =  LogicalExpression sm "or" sm LogicalExpression
+  
+      precedence And:
+      | And          = LogicalExpression sm "and" sm LogicalExpression
+      
+      precedence Equal:
+      | Equal        = Expression sm "=" sm Expression
+      | NotEqual     = Expression sm "<>" sm Expression
+      
+      precedence LessGreater:
+      | LessEqual    = Expression sm "<=" sm Expression
+      | Less         = Expression sm "<"  sm Expression
+      | GreaterEqual = Expression sm ">=" sm Expression
+      | Greater      = Expression sm ">"  sm Expression
+
+      precedence Unary:
+      | LogicalNegate = "not" LogicalExpression      
+      | ValueIsNotNull = Expression "is" "not" "null"
+      | ValueIsNull = Expression "is" "null"
+      | Like = Expression "like" Expression
+      | NotLike = Expression sm "not" sm "like" sm Expression
+      | In = Expression "in" MyValues
+      | NotIn = Expression "not" "in" MyValues
+      | Exists = "exists" "(" Query ")"          
+    }	
+
+    syntax Expression
+    {
+      | IntegerLiteral         = IntegerLiteral      
+      | FloatLiteral           = FloatLiteral
+      | StringLiteral          = StringLiteral
+      | DateLiteral            = "#" DateLiteral  
+           
+      | Null                   = "null"
+      | Field                  = FID
+      | QueryExpression        = "(" Query ")"
+      | Case                   = "case" ("when" LogicalExpression = LogicalExpression "then" Expression = Expression)+ ("else" ElseExpression=Expression)? "end"  
+      | CountAll               = "count" "(" "*" ")" 
+      | FunCall                = FuncName = Reference "(" (Expression; "," sm)* ")" 
+      | Braces                 = "(" Expression ")"
+
+      precedence Concat:      
+      | Concat       =  Expression sm "&" sm Expression
+
+      precedence Sum:
+      | Sum          = Expression sm "+"  sm Expression
+      | Sub          = Expression sm "-"  sm Expression
+      | Modulus      = Expression sm "%"  sm Expression
+      
+      precedence Mul:
+      | Multiply     = Expression sm "*"  sm Expression
+      | Divide       = Expression sm "/"  sm Expression
+      
+      precedence Unary:
+      | Plus          = "+" Expression
+      | Minus         = "-" Expression
+    }   
+ 
+  }
+}

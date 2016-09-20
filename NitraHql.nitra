@@ -1,0 +1,7 @@
+﻿language NitraHql
+{
+  //span class DateTime         { ForegroundColor=Maroon;     }
+
+  syntax module Hql.HqlSyntax start rule Start;
+}
+

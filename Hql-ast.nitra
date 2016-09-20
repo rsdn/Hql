@@ -1,0 +1,24 @@
+using Nitra;
+using Nitra.Declarations;
+
+namespace Hql
+{
+  ast Start
+  {
+    Start : Start;
+  }
+  
+  abstract ast Expr : BindableAst
+  {
+      | IntegerLiteral { Value : int; }
+      | FloatLiteral   { Value : double; }
+      | StringLiteral  { Value : string; }
+      | DateLiteral    { Value : DateTime; }
+	  
+  }
+  
+  abstract ast Unary : Expr 
+  { 
+    Expr1 : Expr; 
+  }   
+}

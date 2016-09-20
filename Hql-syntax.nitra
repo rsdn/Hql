@@ -82,93 +82,60 @@
 
     [SpanClass(String)]
     token StringLiteral 
-	{ 
-	  | DoubleStringLiteralPart =   "\"" DoubleStringLiteralPart* "\"" 
-	  | SingleStringLiteralPart = "'" SingleStringLiteralPart* "'"
-	}
+  { 
+    | DoubleStringLiteralPart =   "\"" DoubleStringLiteralPart* "\"" 
+    | SingleStringLiteralPart = "'" SingleStringLiteralPart* "'"
+  }
     
     regex IdentifierStartCharacter           = LetterCharacter | "_";
     regex IdentifierMyPartCharacters           = LetterCharacter | DecimalDigitCharacter;
 
-    //Syntax
-           
-    syntax IdName                             = IdentifierStartCharacter IdentifierMyPartCharacters*;
-    syntax IdBracketName                      = "[" (!"]" Any)+ "]";
-
-    syntax IdBody
-	{ 
-	  | IdName = IdName 
-	  | IdBracketName = IdBracketName
-	}
+    [ExplicitSpaces]
+    syntax QualifiedIdentifierPart
+    { 
+      | Reference
+      | QuotedReference = "[" Reference=(!"]" Any)+ "]"
+    }
 
     syntax StringAlias
-	{ 
-	   | IdBody = IdBody 
-	   | StringLiteral = StringLiteral
-	}
+    { 
+       | QualifiedIdentifierPart
+       | StringLiteral = StringLiteral
+    }
     
-	regex OperatorDelimiter = "." | "^" | "->" | "<-";
+    regex Delimiter = "." | "^" | "->" | "<-";
 
     [ExplicitSpaces]
-    syntax Id = (IdBody; Operator=OperatorDelimiter)+;
-
-    syntax FID
-	{ 
-	  | IdPlusBody = Id "." IdBody
-      | IdBody = IdBody
-	}
+    syntax QualifiedIdentifier  = (QualifiedIdentifierPart; s Delimiter s)+; // TODO: In C# spec. it's "namespace-or-type-name". Rename it!
 
     syntax Alias = "as"? StringAlias;
     
     [StartRule]
     syntax Start = Query;
 
-    syntax Query 
-    {
-       | Union = Union
-       | Select = SelectStm
-    }
-    
-    syntax Union
-    {
-       | UnionEmpty = UnionEmpty 
-       | UnionAll = UnionAll
-    }
-
-    syntax UnionEmpty = Query "union" Query;
-
-    syntax UnionAll = Query "union" "all" Query;
+    syntax Query = (SelectStm; "union" "all"?)*;
        
     syntax SelectStm = FromClause? SelectClause WhereClause? GroupClause? OrderClause?;
 
     syntax SelectClause = "select" "distinct"? ColumnList;
 
-	syntax ColumnList = (Column; ",")+;
-	
-	syntax Column
-	{
-	   | AllTabAllFields = AllTabAllFields
-	   | OneTabAllFields = OneTabAllFields
-       | ColumnSource = ColumnSource
-	}
+  syntax ColumnList = (Column; ",")+;
   
-    syntax ColumnSource
-    {
-      | Expression = Expression
-      | ExpressionWithAlias = Expression Alias
-    }
+  syntax Column
+  {
+     | AllTabAllFields = "*"
+     | OneTabAllFields = QualifiedIdentifier ".*"
+     | Expression
+       | ExpressionWithAlias = Expression Alias
+  }
+  
+  syntax FromClause = "from" sm FromMixed nl;
 
-    syntax AllTabAllFields = "*";
-
-    syntax OneTabAllFields = Id ".*";
-    
-	syntax FromClause = "from" sm FromMixed nl;
-
-    syntax FromMixed
-	{
-	  | FromComma = FromComma sm
-	  | TableSource = TableSource sm
-	}
+  syntax FromMixed
+  {
+    | FromComma = FromComma sm
+    | TableSource = TableSource sm
+  }
 
     syntax FromComma = TableSource sm "," sm FromMixed;
 
@@ -186,127 +153,99 @@
 
     syntax SubQuery = "(" Query ")" sm Alias;
 
-    syntax TableNameFull = TableName = Id sm Alias = Alias?;    
+    syntax TableNameFull = TableName=QualifiedIdentifier sm Alias?;    
 
     syntax Join
     {
-      | InnerJoin = InnerJoin
-      | LeftJoin = LeftJoin
-      | RightJoin = RightJoin
-      | FullJoin = FullJoin
-      | Link = Link 
-    }    
+      | InnerJoin = LeftTableSource=TableSource sm JoinType? sm RightTableSource=TableSource sm "on" sm Expression nl
+      | Link      = TableSource sm "link" sm TableNameFull
+    }
 
-    syntax Link = TableSource sm "link" sm TableNameFull;
+    regex OuterJoinType = "left" | "right" | "full";
 
-    syntax InnerJoin = LeftTableSource = TableSource sm "inner"? sm "join" sm RightTableSource = TableSource sm "on" sm LogicalExpression nl;
-    
-    syntax LeftJoin = LeftTableSource = TableSource sm "left" sm "outer"? sm "join" sm RightTableSource = TableSource sm "on" sm LogicalExpression nl;
+    syntax JoinType
+    {
+      | "inner"
+      | OuterJoin = OuterJoinType sm "outer"?
+    }
 
-    syntax RightJoin = LeftTableSource = TableSource sm "right" sm "outer"? sm "join" sm RightTableSource = TableSource sm "on" sm LogicalExpression nl;
-  
-    syntax FullJoin = LeftTableSource = TableSource sm "full" sm "outer"? sm "join" sm RightTableSource = TableSource sm "on" sm LogicalExpression nl;
-
-    syntax WhereClause = "where" sm LogicalExpression nl;
+    syntax WhereClause = "where" sm Expression nl;
      
-    syntax HavingClause = "having" sm LogicalExpression nl;
+    syntax HavingClause = "having" sm Expression nl;
 
-    syntax GroupClause = "group" "by" GroupList HavingClause = HavingClause?;
+    syntax GroupClause = "group" "by" GroupList=(Expression; ",")+ HavingClause = HavingClause?;
 
-    syntax OrderClause = "order" "by" OrderList;
-
-    syntax GroupList 
-    {
-      | GroupComma = Expression "," GroupList
-      | Expression = Expression
-    }
-
-    syntax OrderList
-    {
-      | OrderComma = OrderComma
-      | OrderField = OrderField
-    }
-
-    syntax OrderComma = OrderField "," OrderList;
+    syntax OrderClause = "order" "by" OrderList=(OrderField; ",")+;
 
     syntax OrderField
     {
-      | OrderAsc = OrderAsc
-      | OrderDesc = OrderDesc
+      | OrderAsc  = Expression "asc"?
+      | OrderDesc = Expression "desc"
     }
 
-    syntax OrderAsc = Expression "asc"?;
-
-    syntax OrderDesc = Expression "desc";
-
-	syntax MyValues
+    syntax MyValues
     {
-      | QueryExpression  = "(" Query ")"
+      | QueryExpression    = "(" Query ")"
       | BracketsExpression = "(" (Expression; "," sm)+ ")"
     }       
 
-    syntax LogicalExpression    
+    syntax Expression
     {
-      | Braces          = "(" LogicalExpression ")"
+      | Braces         = "(" Expression ")"
+      | Query          = "(" Query ")"
+      | Exists         = "exists" "(" Query ")"
 
-      precedence Or:
-      | Or           =  LogicalExpression sm "or" sm LogicalExpression
+      | IntegerLiteral = IntegerLiteral
+      | FloatLiteral   = FloatLiteral
+      | StringLiteral  = StringLiteral
+      | DateLiteral    = "#" DateLiteral
+           
+      | Null           = "null"
+      | Field          = QualifiedIdentifier
+      | Case           = "case" ("when" Condition=Expression "then" Then=Expression)+ ("else" Else=Expression)? "end"  
+      | CountAll       = "count" "(" "*" ")" 
+      | FunCall        = FuncName = Reference "(" (Expression; "," sm)* ")" 
+      | LogicalNegate  = "not" Expression
+
+    precedence Or:
+      | Or           =  Expression sm "or" sm Expression
   
-      precedence And:
-      | And          = LogicalExpression sm "and" sm LogicalExpression
+    precedence And:
+      | And          = Expression sm "and" sm Expression
       
-      precedence Equal:
-      | Equal        = Expression sm "=" sm Expression
+    precedence Equal:
+      | Equal        = Expression sm "="  sm Expression
       | NotEqual     = Expression sm "<>" sm Expression
       
-      precedence LessGreater:
+    precedence LessGreater:
       | LessEqual    = Expression sm "<=" sm Expression
       | Less         = Expression sm "<"  sm Expression
       | GreaterEqual = Expression sm ">=" sm Expression
       | Greater      = Expression sm ">"  sm Expression
 
-      precedence Unary:
-      | LogicalNegate = "not" LogicalExpression      
+    precedence Unary:
       | ValueIsNotNull = Expression "is" "not" "null"
-      | ValueIsNull = Expression "is" "null"
-      | Like = Expression "like" Expression
-      | NotLike = Expression sm "not" sm "like" sm Expression
-      | In = Expression "in" MyValues
-      | NotIn = Expression "not" "in" MyValues
-      | Exists = "exists" "(" Query ")"          
-    }	
+      | ValueIsNull    = Expression "is" "null"
+      | Like           = Expression "like" Expression
+      | NotLike        = Expression sm "not" sm "like" sm Expression
+      | In             = Expression "in" MyValues
+      | NotIn          = Expression "not" "in" MyValues
 
-    syntax Expression
-    {
-      | IntegerLiteral         = IntegerLiteral      
-      | FloatLiteral           = FloatLiteral
-      | StringLiteral          = StringLiteral
-      | DateLiteral            = "#" DateLiteral  
-           
-      | Null                   = "null"
-      | Field                  = FID
-      | QueryExpression        = "(" Query ")"
-      | Case                   = "case" ("when" LogicalExpression = LogicalExpression "then" Expression = Expression)+ ("else" ElseExpression=Expression)? "end"  
-      | CountAll               = "count" "(" "*" ")" 
-      | FunCall                = FuncName = Reference "(" (Expression; "," sm)* ")" 
-      | Braces                 = "(" Expression ")"
-
-      precedence Concat:      
+    precedence Concat:      
       | Concat       =  Expression sm "&" sm Expression
 
-      precedence Sum:
+    precedence Sum:
       | Sum          = Expression sm "+"  sm Expression
       | Sub          = Expression sm "-"  sm Expression
       | Modulus      = Expression sm "%"  sm Expression
       
-      precedence Mul:
+    precedence Mul:
       | Multiply     = Expression sm "*"  sm Expression
       | Divide       = Expression sm "/"  sm Expression
       
-      precedence Unary:
+    precedence Unary:
       | Plus          = "+" Expression
       | Minus         = "-" Expression
     }   
- 
   }
 }

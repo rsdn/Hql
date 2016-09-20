@@ -1,0 +1,1 @@
+ from w as t select t.x

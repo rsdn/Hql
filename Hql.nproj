@@ -25,6 +25,9 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <StartProgram>C:\!\Nitra\Nitra.Visualizer.Old\bin\Debug\Nitra.Visualizer.exe</StartProgram>
+    <WorkingDirectory>C:\!\Nitra\Nitra.Visualizer.Old\bin\Debug\</WorkingDirectory>
+    <CmdArgs />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>

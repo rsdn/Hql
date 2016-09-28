@@ -103,10 +103,20 @@
        | StringLiteral = StringLiteral
     }
     
-    regex Delimiter = "." | "^" | "->" | "<-";
-
     [ExplicitSpaces]
-    syntax QualifiedIdentifier = (QualifiedIdentifierPart; s Delimiter s)+;
+    syntax QualifiedIdentifier
+    {
+      regex Delimiter = "." | "^" | "->" | "<-";
+      syntax QIPredicate = QualifiedIdentifierPart s Delimiter s QualifiedIdentifierPart;
+
+      | QualifiedIdentifierPart
+    precedence TableAcces:
+      | Ma1 = QualifiedIdentifier s "->" s &QIPredicate QualifiedIdentifier
+      | Ma2 = QualifiedIdentifier s "<-" s &QIPredicate QualifiedIdentifier
+      | Ma3 = QualifiedIdentifier s "^"  s &QIPredicate QualifiedIdentifier
+    precedence MemberAcces:
+      | Ma4 = QualifiedIdentifier s "."  s QualifiedIdentifier
+    }
 
     syntax Alias = "as"? StringAlias;
     

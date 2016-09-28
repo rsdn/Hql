@@ -1,1 +1,2 @@
- from w as t select t.x
+ from w as t inner join w as l on t.dd = l.eee
+ select t.x

@@ -155,7 +155,7 @@
 
     syntax Join
     {
-      | InnerJoin = LeftTableSource=TableSource sm JoinType? sm RightTableSource=TableSource sm "on" sm Expression nl
+      | InnerJoin = LeftTableSource=TableSource sm JoinType? "join" sm RightTableSource=TableSource sm "on" sm Expression nl
       | Link      = TableSource sm "link" sm TableNameFull
     }
 
@@ -163,7 +163,7 @@
 
     syntax JoinType
     {
-      | "inner"
+      | "inner"?
       | OuterJoin = OuterJoinType sm "outer"?
     }
 

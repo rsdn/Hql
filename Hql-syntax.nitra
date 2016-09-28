@@ -149,8 +149,10 @@
 
     syntax TableSource
     {
-      | Source = Source sm
-      | Join = Join
+      | Source
+    precedence Join:
+      | InnerJoin = LeftTableSource=TableSource sm JoinType? "join" sm RightTableSource=Source sm "on" sm Expression nl
+      | Link      = TableSource sm "link" sm TableNameFull
     }
 
     syntax Source
@@ -162,12 +164,6 @@
     syntax SubQuery = "(" Query ")" sm Alias;
 
     syntax TableNameFull = TableName=QualifiedIdentifier sm Alias?;    
-
-    syntax Join
-    {
-      | InnerJoin = LeftTableSource=TableSource sm JoinType? "join" sm RightTableSource=TableSource sm "on" sm Expression nl
-      | Link      = TableSource sm "link" sm TableNameFull
-    }
 
     regex OuterJoinType = "left" | "right" | "full";
 

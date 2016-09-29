@@ -103,20 +103,18 @@
        | StringLiteral = StringLiteral
     }
     
-    [ExplicitSpaces]
-    syntax QualifiedIdentifier
-    {
-      regex Delimiter = "." | "^" | "->" | "<-";
-      syntax QIPredicate = QualifiedIdentifierPart s Delimiter s QualifiedIdentifierPart;
+	regex Delimiter = "." | "^" | "->" | "<-";
 
-      | QualifiedIdentifierPart
-    precedence TableAcces:
-      | Ma1 = QualifiedIdentifier s "->" s &QIPredicate QualifiedIdentifier
-      | Ma2 = QualifiedIdentifier s "<-" s &QIPredicate QualifiedIdentifier
-      | Ma3 = QualifiedIdentifier s "^"  s &QIPredicate QualifiedIdentifier
-    precedence MemberAcces:
-      | Ma4 = QualifiedIdentifier s "."  s QualifiedIdentifier
-    }
+    [ExplicitSpaces]
+    syntax QualifiedIdentifier = (QualifiedIdentifierPart; s Delimiter s)+;
+    
+	syntax Field
+	{	
+	   precedence TableField:
+	   | Field (Delimiter QualifiedIdentifierPart)? "." QualifiedIdentifierPart;	   
+	   precedence Field:
+	   | QualifiedIdentifierPart;   
+	}
 
     syntax Alias = "as"? StringAlias;
     
@@ -130,10 +128,12 @@
     syntax SelectClause = "select" "distinct"? ColumnList=(Column; ",")+;
 
     syntax Column
-    {
+    {	   
+	precedence All:
        | AllTabAllFields = "*"
        | OneTabAllFields = QualifiedIdentifier ".*"
-       | Expression
+	precedence Expr:
+	   | Expression
        | ExpressionWithAlias = Expression Alias
     }
   
@@ -205,7 +205,7 @@
       | DateLiteral    = "#" DateLiteral
            
       | Null           = "null"
-      | Field          = QualifiedIdentifier
+      | Field          = Field
       | Case           = "case" ("when" Condition=Expression "then" Then=Expression)+ ("else" Else=Expression)? "end"  
       | CountAll       = "count" "(" "*" ")" 
       | FunCall        = FuncName = Reference "(" (Expression; "," sm)* ")" 

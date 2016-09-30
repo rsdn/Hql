@@ -102,18 +102,22 @@
        | QualifiedIdentifierPart
        | StringLiteral = StringLiteral
     }
-    
-	regex Delimiter = "." | "^" | "->" | "<-";
+    	
+	regex Delimiter = "^" | "->" | "<-" | "." ;
+
 
     [ExplicitSpaces]
     syntax QualifiedIdentifier = (QualifiedIdentifierPart; s Delimiter s)+;
     
 	syntax Field
 	{	
-	   precedence TableField:
-	   | Field (Delimiter QualifiedIdentifierPart)? "." QualifiedIdentifierPart;	   
-	   precedence Field:
-	   | QualifiedIdentifierPart;   
+	   syntax QIPredicate = Delimiter s QualifiedIdentifierPart s Delimiter;
+
+	   precedence SingleField:
+	   | SingleField = QualifiedIdentifierPart;   
+
+	   precedence TableLinkAndField:
+	   | TableLink = (QualifiedIdentifierPart s (&QIPredicate Delimiter s QualifiedIdentifierPart s)? (&QIPredicate Delimiter)?)+ "." Field = QualifiedIdentifierPart;	   
 	}
 
     syntax Alias = "as"? StringAlias;
@@ -128,10 +132,12 @@
     syntax SelectClause = "select" "distinct"? ColumnList=(Column; ",")+;
 
     syntax Column
-    {	   
+    {	
+	   
 	precedence All:
        | AllTabAllFields = "*"
        | OneTabAllFields = QualifiedIdentifier ".*"
+
 	precedence Expr:
 	   | Expression
        | ExpressionWithAlias = Expression Alias

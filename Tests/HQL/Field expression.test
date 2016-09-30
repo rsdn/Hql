@@ -1,2 +1,2 @@
 from t
-select ww->dd.kk.dd
+select ww -> ww -> dd . kk . dd->dd.d 

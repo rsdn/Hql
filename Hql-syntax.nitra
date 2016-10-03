@@ -141,30 +141,30 @@
        | ExpressionWithAlias = Expression Alias
     }
   
-    syntax FromClause = "from" sm FromMixed nl;
+    syntax FromClause = "from" sm TableSources nl;
 
-    syntax FromMixed
-    {
-      | FromComma = FromComma sm
-      | TableSource = TableSource sm
-    }
+	syntax TableSources = (TableSource; ",")*;
+	
+	syntax TableSource
+	{
+	  | TableSourceItemJoined
+	  | TableSourceItemJoinedWithBrackets = "(" + TableSourceItemJoined +")"
+	}
 
-    syntax FromComma = TableSource sm "," sm FromMixed;
+	syntax TableSourceItemJoined = TableSourceItem JoinPart*;
 
-    syntax TableSource
-    {
-      | Source
-    precedence Join:
-      | InnerJoin = LeftTableSource=TableSource sm JoinType? "join" sm RightTableSource=Source sm "on" sm Expression nl
-      | Link      = TableSource sm "link" sm TableNameFull
-    }
-
-    syntax Source
-    {
+	syntax TableSourceItem
+	{
       | SubQuery = SubQuery
       | TableNameFull = TableNameFull
     }
 
+	syntax JoinPart
+	{
+	   | Join = JoinType = JoinType? "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
+	   | Link = TableSource sm "link" sm TableNameFull
+	}
+    
     syntax SubQuery = "(" Query ")" sm Alias;
 
     syntax TableNameFull = TableName=QualifiedIdentifier sm Alias?;    
@@ -177,7 +177,7 @@
       | OuterJoin = OuterJoinType sm "outer"?
     }
 
-    syntax WhereClause = "where" sm Expression nl;
+    syntax WhereClause = "where" sm LogicalExpression nl;
      
     syntax HavingClause = "having" sm Expression nl;
 
@@ -197,6 +197,31 @@
       | BracketsExpression = "(" (Expression; "," sm)+ ")"
     }       
 
+	regex ComparsionOperator = "=" | "<>" | "<=" | "<" | ">=" | ">";
+
+	syntax LogicalExpression
+	{
+	precedence Or:
+      | Or           =  LogicalExpression sm "or" sm LogicalExpression
+  
+    precedence And:
+      | And          = LogicalExpression sm "and" sm LogicalExpression
+    
+	precedence Not:
+	  | Not          = "not" LogicalExpression
+      
+    precedence Comparsion:
+      | Comparsion   = Expression sm ComparsionOperator sm Expression
+      
+    precedence Unary:
+      | ValueIsNotNull = Expression "is" "not" "null"
+      | ValueIsNull    = Expression "is" "null"
+      | Like           = Expression "like" Expression
+      | NotLike        = Expression sm "not" sm "like" sm Expression
+      | In             = Expression "in" MyValues
+      | NotIn          = Expression "not" "in" MyValues
+	}
+
     syntax Expression
     {
       | Braces         = "(" Expression ")"
@@ -212,32 +237,7 @@
       | Field          = Field
       | Case           = "case" ("when" Condition=Expression "then" Then=Expression)+ ("else" Else=Expression)? "end"  
       | CountAll       = "count" "(" "*" ")" 
-      | FunCall        = FuncName = Reference "(" (Expression; "," sm)* ")" 
-      | LogicalNegate  = "not" Expression
-
-    precedence Or:
-      | Or           =  Expression sm "or" sm Expression
-  
-    precedence And:
-      | And          = Expression sm "and" sm Expression
-      
-    precedence Equal:
-      | Equal        = Expression sm "="  sm Expression
-      | NotEqual     = Expression sm "<>" sm Expression
-      
-    precedence LessGreater:
-      | LessEqual    = Expression sm "<=" sm Expression
-      | Less         = Expression sm "<"  sm Expression
-      | GreaterEqual = Expression sm ">=" sm Expression
-      | Greater      = Expression sm ">"  sm Expression
-
-    precedence Unary:
-      | ValueIsNotNull = Expression "is" "not" "null"
-      | ValueIsNull    = Expression "is" "null"
-      | Like           = Expression "like" Expression
-      | NotLike        = Expression sm "not" sm "like" sm Expression
-      | In             = Expression "in" MyValues
-      | NotIn          = Expression "not" "in" MyValues
+      | FunCall        = FuncName = Reference "(" (Expression; "," sm)* ")"
 
     precedence Concat:      
       | Concat       =  Expression sm "&" sm Expression

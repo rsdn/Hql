@@ -1,0 +1,4 @@
+from w astinnerjoin w asl on t.dd = l.eee
+innerjoin pp  on l.dd = pp.d
+
+selectt.xwhere aa = 0 or bb = 1 and mm = 5

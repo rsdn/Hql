@@ -1,0 +1,3 @@
+from Document asdinnerjoin Resolution r on d.Id = r.DocumentId
+
+selectd.DocumentName,r.Author.Name

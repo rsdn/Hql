@@ -1,0 +1,2 @@
+from Document d
+selectd^Resolution->Author.Name

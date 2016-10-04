@@ -148,7 +148,7 @@
 	syntax TableSource
 	{
 	  | TableSourceItemJoined
-	  | TableSourceItemJoinedWithBrackets = "(" + TableSourceItemJoined +")"
+	  | TableSourceItemJoinedWithBrackets = "(" TableSourceItemJoined ")"
 	}
 
 	syntax TableSourceItemJoined = TableSourceItem JoinPart*;
@@ -162,7 +162,7 @@
 	syntax JoinPart
 	{
 	   | Join = JoinType = JoinType? "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
-	   | Link = TableSource sm "link" sm TableNameFull
+	   | Link = "link" sm TableNameFull
 	}
     
     syntax SubQuery = "(" Query ")" sm Alias;
@@ -179,7 +179,7 @@
 
     syntax WhereClause = "where" sm LogicalExpression nl;
      
-    syntax HavingClause = "having" sm Expression nl;
+    syntax HavingClause = "having" sm LogicalExpression nl;
 
     syntax GroupClause = "group" "by" GroupList=(Expression; ",")+ HavingClause = HavingClause?;
 
@@ -201,6 +201,16 @@
 
 	syntax LogicalExpression
 	{
+	  | Braces         = "(" LogicalExpression ")"
+
+	precedence Unary:
+      | ValueIsNotNull = Expression "is" "not" "null"
+      | ValueIsNull    = Expression "is" "null"
+      | Like           = Expression "like" Expression
+      | NotLike        = Expression sm "not" sm "like" sm Expression
+      | In             = Expression "in" MyValues
+      | NotIn          = Expression "not" "in" MyValues
+
 	precedence Or:
       | Or           =  LogicalExpression sm "or" sm LogicalExpression
   
@@ -211,15 +221,7 @@
 	  | Not          = "not" LogicalExpression
       
     precedence Comparsion:
-      | Comparsion   = Expression sm ComparsionOperator sm Expression
-      
-    precedence Unary:
-      | ValueIsNotNull = Expression "is" "not" "null"
-      | ValueIsNull    = Expression "is" "null"
-      | Like           = Expression "like" Expression
-      | NotLike        = Expression sm "not" sm "like" sm Expression
-      | In             = Expression "in" MyValues
-      | NotIn          = Expression "not" "in" MyValues
+      | Comparsion   = Expression sm ComparsionOperator sm Expression         
 	}
 
     syntax Expression
@@ -235,7 +237,7 @@
            
       | Null           = "null"
       | Field          = Field
-      | Case           = "case" ("when" Condition=Expression "then" Then=Expression)+ ("else" Else=Expression)? "end"  
+      | Case           = "case" ("when" Condition=LogicalExpression "then" Then=Expression)+ ("else" Else=Expression)? "end"  
       | CountAll       = "count" "(" "*" ")" 
       | FunCall        = FuncName = Reference "(" (Expression; "," sm)* ")"
 

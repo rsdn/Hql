@@ -1,0 +1,2 @@
+from Document d
+select d.Resolution<-Author.Name

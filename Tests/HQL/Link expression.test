@@ -1,0 +1,2 @@
+ from Document d link Document.Resolution.Author a
+ select d.DocumentName, a.Name, a.Address

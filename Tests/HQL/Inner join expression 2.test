@@ -1,0 +1,2 @@
+ from Document as d join Resolution r on d.Id = r.DocumentId
+ select d.DocumentName, r.Author.Name

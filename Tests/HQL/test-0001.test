@@ -1,4 +1,0 @@
- from w as t inner join w as l on t.dd = l.eee
- inner join pp on l.dd = pp.d
- select t.x
- where aa=bb

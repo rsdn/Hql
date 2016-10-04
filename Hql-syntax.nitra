@@ -120,16 +120,16 @@
       | TableLink = (QualifiedIdentifierPart s (&QIPredicate Delimiter s QualifiedIdentifierPart s)? (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
     }
 
-    syntax Alias = "as"? StringAlias;
+    syntax Alias = ("as" sm)? StringAlias;
     
     [StartRule]
     syntax Start = Query;
 
-    syntax Query = (SelectStm; "union" "all"?)*;
+    syntax Query = (SelectStm; "union" sm "all"? nl)*;
        
     syntax SelectStm = FromClause? SelectClause WhereClause? GroupClause? OrderClause?;
 
-    syntax SelectClause = "select" "distinct"? ColumnList=(Column; ",")+;
+    syntax SelectClause = "select" sm ("distinct" sm)? ColumnList=(Column; "," sm)+ nl;
 
     syntax Column
     {	
@@ -141,7 +141,7 @@
        | ExpressionWithAlias = Expression Alias
     }
   
-    syntax FromClause = "from" sm TableSources nl;
+    syntax FromClause = "from" sm TableSources;
 
 	syntax TableSources = (TableSource; ",")*;
 	
@@ -156,39 +156,39 @@
 	syntax TableSourceItem
 	{
       | SubQuery = SubQuery
-      | TableNameFull = TableNameFull
+      | TableNameFull = TableNameFull nl
     }
 
 	syntax JoinPart
 	{
 	   | Join = JoinType = JoinType? "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
-	   | Link = "link" sm TableNameFull
+	   | Link = "link" sm TableNameFull nl
 	}
     
-    syntax SubQuery = "(" Query ")" sm Alias;
+    syntax SubQuery = "(" Query ")" sm Alias sm;
 
-    syntax TableNameFull = TableName=QualifiedIdentifier sm Alias?;    
+    syntax TableNameFull = TableName=QualifiedIdentifier sm (Alias sm)?;    
 
     regex OuterJoinType = "left" | "right" | "full";
 
     syntax JoinType
     {
       | "inner"?
-      | OuterJoin = OuterJoinType sm "outer"?
+      | OuterJoin = OuterJoinType sm ("outer" sm)?
     }
 
     syntax WhereClause = "where" sm LogicalExpression nl;
      
     syntax HavingClause = "having" sm LogicalExpression nl;
 
-    syntax GroupClause = "group" "by" GroupList=(Expression; ",")+ HavingClause = HavingClause?;
+    syntax GroupClause = "group" "by" GroupList=(Expression; "," sm)+ nl HavingClause = HavingClause?;
 
-    syntax OrderClause = "order" "by" OrderList=(OrderField; ",")+;
+    syntax OrderClause = "order" "by" OrderList=(OrderField; "," sm)+ nl;
 
     syntax OrderField
     {
-      | OrderAsc  = Expression "asc"?
-      | OrderDesc = Expression "desc"
+      | OrderAsc  = Expression sm "asc"?
+      | OrderDesc = Expression sm "desc"
     }
 
     syntax MyValues
@@ -204,21 +204,22 @@
 	  | Braces         = "(" LogicalExpression ")"
 
 	precedence Unary:
-      | ValueIsNotNull = Expression "is" "not" "null"
-      | ValueIsNull    = Expression "is" "null"
-      | Like           = Expression "like" Expression
+      | ValueIsNotNull = Expression sm "is" sm "not" sm "null"
+      | ValueIsNull    = Expression sm "is" sm "null"
+      | Like           = Expression sm "like" sm Expression
       | NotLike        = Expression sm "not" sm "like" sm Expression
-      | In             = Expression "in" MyValues
-      | NotIn          = Expression "not" "in" MyValues
+      | In             = Expression sm "in" sm MyValues
+      | NotIn          = Expression sm "not" sm "in" sm MyValues
+	  | Exists         = "exists" sm "(" Query ")"
 
 	precedence Or:
-      | Or           =  LogicalExpression sm "or" sm LogicalExpression
+      | Or           =  LogicalExpression sm "or" nl LogicalExpression sm
   
     precedence And:
-      | And          = LogicalExpression sm "and" sm LogicalExpression
+      | And          = LogicalExpression sm "and" nl LogicalExpression sm
     
 	precedence Not:
-	  | Not          = "not" LogicalExpression
+	  | Not          = "not" sm LogicalExpression
       
     precedence Comparsion:
       | Comparsion   = Expression sm ComparsionOperator sm Expression         
@@ -227,8 +228,7 @@
     syntax Expression
     {
       | Braces         = "(" Expression ")"
-      | Query          = "(" Query ")"
-      | Exists         = "exists" "(" Query ")"
+      | Query          = "(" Query ")"      
 
       | IntegerLiteral
       | FloatLiteral
@@ -237,7 +237,7 @@
            
       | Null           = "null"
       | Field          = Field
-      | Case           = "case" ("when" Condition=LogicalExpression "then" Then=Expression)+ ("else" Else=Expression)? "end"  
+      | Case           = "case" nl ("when" sm Condition=LogicalExpression sm "then" sm Then=Expression nl)+ ("else" sm Else=Expression nl)? "end" nl 
       | CountAll       = "count" "(" "*" ")" 
       | FunCall        = FuncName = Reference "(" (Expression; "," sm)* ")"
 

@@ -1,0 +1,5 @@
+ from Document as d join Resolution r on d.Id = r.DocumentId
+      left outer join Author a on r.AuthorId = a.Id
+      link a.Address s
+      right outer join City c on s.CityId = c.Id
+ select d.DocumentName, r.Author.Name

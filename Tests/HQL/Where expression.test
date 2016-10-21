@@ -1,6 +1,6 @@
 from Document d
 select d.Resolution<-Author.Name
-where d.Number=25 and (d.Date = #"01.01.2010" and func(d.Number, d.Date) = 1
+where d.Number=25 and (d->Date.jj = #"01.01.2010" and func(d.Number, d.Date) = 1
       or (1=1)) and aa not in (1,2) and exists (from dd select aa) and not 0=1
       or bb is not null and ss is null or rr like "%ddd" and kk not like "%dd"
       and ee in (1,2) and count(*) = 1

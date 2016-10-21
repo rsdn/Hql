@@ -102,8 +102,14 @@
        | QualifiedIdentifierPart
        | StringLiteral = StringLiteral
     }
-    
-    regex Delimiter = "^" | "->" | "<-" | "." ;
+        
+	syntax Delimiter
+	{
+	   | FullJoin = "^"
+	   | RightJoin = "->"
+	   | LeftJoin = "<-"
+	   | DefaultJoin = "."
+	}
 
 
     [ExplicitSpaces]
@@ -125,7 +131,13 @@
     [StartRule]
     syntax Start = Query;
 
-    syntax Query = (SelectStm; "union" sm "all"? nl)*;
+	syntax Query = (SelectStm; UnionType nl)*;
+
+	syntax UnionType
+	{
+	  | Union = "union"
+	  | UnionAll = "union" sm "all"
+	}
        
     syntax SelectStm = FromClause? SelectClause WhereClause? GroupClause? OrderClause?;
 
@@ -137,7 +149,7 @@
        | OneTabAllFields = QualifiedIdentifier ".*"
 
 	  precedence Expr:
-	     | Expression
+	   | Expression
        | ExpressionWithAlias = Expression Alias
     }
   
@@ -167,13 +179,18 @@
     
     syntax SubQuery = "(" Query ")" sm Alias sm;
 
-    syntax TableNameFull = TableName=QualifiedIdentifier sm (Alias sm)?;    
+    syntax TableNameFull = TableName=QualifiedIdentifier sm Alias=(Alias sm)?;
 
-    regex OuterJoinType = "left" | "right" | "full";
+	syntax OuterJoinType
+	{
+	  | Left = "left"
+	  | Right = "right"
+	  | Full = "full"
+	}
 
     syntax JoinType
     {
-      | "inner"?
+      | Inner = "inner"?
       | OuterJoin = OuterJoinType sm ("outer" sm)?
     }
 

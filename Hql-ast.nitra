@@ -1,11 +1,99 @@
 using Nitra;
 using Nitra.Declarations;
+using System;
 
 namespace Hql
 {
   ast Start
   {
-    Start : Start;
+    Query : Query;
+  }
+
+  ast Query
+  {
+     SelectStm : SelectStm;
+	 Union : string;
+	 UnionAll : string;
+  }
+
+  ast SelectStm
+  {
+     FromClause : FromClause?;
+  }
+
+  ast FromClause
+  {
+    TableSources : TableSource*;
+  }
+
+  ast TableSource
+  {
+    TableSourceItem : TableSourceItem; 
+	JoinParts : JoinPart*;
+  }
+
+  abstract ast JoinPart
+  {
+    |Join { JoinType : JoinType; RightTable : TableSource; Expression : LogicalExpression; }
+	|Link { TableNameFull : TableNameFull; }
+  }
+
+  ast LogicalExpression
+  {
+  }
+
+  ast JoinType
+  {
+     Type : JoinTypes;
+  }
+
+  abstract ast JoinTypes
+  {
+    | Inner
+	| Left
+	| Right
+	| Full
+  }
+
+  abstract ast TableSourceItem
+  {
+     | SubQuery { Query : Query; Alias : Alias; } 
+	 | TableSourceNameFull { TableNameFull : TableNameFull; }
+  }
+
+  ast TableNameFull
+  {
+     TableName : QualifiedIdentifier; 
+	 Alias : string;
+  }
+
+  ast Alias
+  {
+     Name : string;
+  }
+
+  ast QualifiedIdentifier
+  {
+     QualifiedIdentifierParts : QualifiedIdentifierPartPair*;
+  }
+
+  ast QualifiedIdentifierPartPair
+  {
+     QualifiedIdentifierPart : QualifiedIdentifierPart;
+	 Delimiter : Delimiter;
+  }
+
+  ast QualifiedIdentifierPart
+  {
+     Reference : string;
+  }
+
+  abstract ast Delimiter
+  {
+    |FullJoinDelimiter
+	|RightJoinDelimiter
+	|LeftJoinDelimiter
+	|DefaultJoinDelimiter
   }
   
   abstract ast Expr : BindableAst
@@ -13,8 +101,7 @@ namespace Hql
       | IntegerLiteral { Value : int; }
       | FloatLiteral   { Value : double; }
       | StringLiteral  { Value : string; }
-      | DateLiteral    { Value : DateTime; }
-	  
+      | DateLiteral    { Value : DateTime; }	  
   }
   
   abstract ast Unary : Expr 

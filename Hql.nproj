@@ -48,6 +48,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Hql-ast.nitra">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NitraHql.nitra">
       <SubType>Code</SubType>
     </Compile>

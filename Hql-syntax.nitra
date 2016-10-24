@@ -141,7 +141,7 @@
        
     syntax SelectStm = FromClause? SelectClause WhereClause? GroupClause? OrderClause?;
 
-    syntax SelectClause = "select" sm ("distinct" sm)? ColumnList=(Column; "," sm)+ nl;
+    syntax SelectClause = "select" sm (Distinct="distinct" sm)? ColumnList=(Column; "," sm)+ nl;
 
     syntax Column
     {	
@@ -223,10 +223,16 @@
 	precedence Unary:
       | ValueIsNotNull = Expression sm "is" sm "not" sm "null"
       | ValueIsNull    = Expression sm "is" sm "null"
+
+    precedence Like:
       | Like           = Expression sm "like" sm Expression
       | NotLike        = Expression sm "not" sm "like" sm Expression
+
+    precedence In:
       | In             = Expression sm "in" sm MyValues
       | NotIn          = Expression sm "not" sm "in" sm MyValues
+
+    precedence Exists:
 	  | Exists         = "exists" sm "(" Query ")"
 
 	precedence Or:
@@ -239,8 +245,15 @@
 	  | Not          = "not" sm LogicalExpression
       
     precedence Comparsion:
-      | Comparsion   = Expression sm ComparsionOperator sm Expression         
+	  | Equal        = Expression sm "=" sm Expression
+	  | NotEqual     = Expression sm "<>" sm Expression
+	  | LessEqual    = Expression sm "<=" sm Expression
+	  | Less         = Expression sm "<" sm Expression
+	  | GreaterEqual = Expression sm ">=" sm Expression
+	  | Greater      = Expression sm ">" sm Expression
 	}
+
+	syntax Argument = Expression;
 
     syntax Expression
     {
@@ -256,7 +269,7 @@
       | Field          = Field
       | Case           = "case" nl ("when" sm Condition=LogicalExpression sm "then" sm Then=Expression nl)+ ("else" sm Else=Expression nl)? "end" nl 
       | CountAll       = "count" "(" "*" ")" 
-      | FunCall        = FuncName = Reference "(" (Expression; "," sm)* ")"
+      | FunCall        = FuncName = Field "(" (Argument; "," sm)* ")"
 
     precedence Concat:      
       | Concat       =  Expression sm "&" sm Expression

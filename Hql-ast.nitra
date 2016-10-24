@@ -12,13 +12,62 @@ namespace Hql
   ast Query
   {
      SelectStm : SelectStm;
-	 Union : string;
-	 UnionAll : string;
+	 Union     : string;
+	 UnionAll  : string;
   }
 
   ast SelectStm
   {
      FromClause : FromClause?;
+	 SelectClause : SelectClause;
+	 WhereClause : WhereClause?;
+	 GroupClause : GroupClause?;
+	 OrderClause : OrderClause?;
+  }  
+
+  ast OrderClause
+  {
+     OrderFields : OrderField;
+  }
+
+  abstract ast OrderFieldExpression : OrderField
+  {
+    Expression : Expression;
+  }
+
+  abstract ast OrderField
+  {
+    | OrderAsc : OrderFieldExpression
+    | OrderDesc : OrderFieldExpression
+  }
+
+  ast GroupClause
+  {
+     Expressions : Expression*;
+	 HavingClause : HavingClause?;
+  }
+
+  ast HavingClause
+  {
+    LogicalExpression : LogicalExpression;
+  }
+
+  ast WhereClause
+  {
+     LogicalExpression : LogicalExpression;
+  }
+
+  ast SelectClause
+  {
+     Distinct : bool;
+	 Columns : Column*;
+  }
+
+  abstract ast Column
+  {
+    | AllTabAllFields
+	| OneTabAllFields { TableName : QualifiedIdentifier; }
+	| ColumnExpressionWithAlias { Expression : Expression; Alias : string; }
   }
 
   ast FromClause
@@ -29,17 +78,13 @@ namespace Hql
   ast TableSource
   {
     TableSourceItem : TableSourceItem; 
-	JoinParts : JoinPart*;
+	JoinParts       : JoinPart*;
   }
 
   abstract ast JoinPart
   {
-    |Join { JoinType : JoinType; RightTable : TableSource; Expression : LogicalExpression; }
-	|Link { TableNameFull : TableNameFull; }
-  }
-
-  ast LogicalExpression
-  {
+    | Join { JoinType : JoinType; RightTable : TableSource; Expression : LogicalExpression; }
+	| Link { TableNameFull : TableNameFull; }
   }
 
   ast JoinType
@@ -57,14 +102,14 @@ namespace Hql
 
   abstract ast TableSourceItem
   {
-     | SubQuery { Query : Query; Alias : Alias; } 
+     | SubQuery            { Query : Query; Alias : Alias; } 
 	 | TableSourceNameFull { TableNameFull : TableNameFull; }
   }
 
   ast TableNameFull
   {
      TableName : QualifiedIdentifier; 
-	 Alias : string;
+	 Alias     : string;
   }
 
   ast Alias
@@ -80,7 +125,7 @@ namespace Hql
   ast QualifiedIdentifierPartPair
   {
      QualifiedIdentifierPart : QualifiedIdentifierPart;
-	 Delimiter : Delimiter;
+	 Delimiter               : Delimiter;
   }
 
   ast QualifiedIdentifierPart
@@ -95,17 +140,127 @@ namespace Hql
 	|LeftJoinDelimiter
 	|DefaultJoinDelimiter
   }
-  
-  abstract ast Expr : BindableAst
+
+  abstract ast MyValues
   {
-      | IntegerLiteral { Value : int; }
-      | FloatLiteral   { Value : double; }
-      | StringLiteral  { Value : string; }
-      | DateLiteral    { Value : DateTime; }	  
+    | QueryExpression    { Query : Query;}
+	| BracketsExpression { ExpressionList : Expression*;}
+  }
+
+  abstract ast LogicalUnary : LogicalExpression
+  {
+      Expr1 : LogicalExpression;
+  }
+
+  abstract ast ExpLogicalUnary : LogicalExpression
+  {
+      Expr1 : Expression;
+  }
+
+  abstract ast LogicalBinary : LogicalExpression
+  {
+      Expr1 : LogicalExpression;
+	  Expr2 : LogicalExpression;
+  }
+
+  abstract ast ExpLogicalBinary : LogicalExpression
+  {
+      Expr1 : Expression;
+	  Expr2 : Expression;
+  }
+
+  abstract ast LogicalIn : LogicalExpression
+  {
+      Expr1  : Expression;
+	  Values : MyValues;
+  }
+
+  abstract ast LogicalExists : LogicalExpression
+  {
+     Expr1 : Expression;
+	 Query : Query;
+  }
+
+  abstract ast LogicalExpression
+  {
+    | ValueIsNotNull : ExpLogicalUnary
+	| ValueIsNull    : ExpLogicalUnary
+	| Like           : ExpLogicalBinary
+	| NotLike        : ExpLogicalBinary
+	| In             : LogicalIn
+	| NotIn          : LogicalIn
+	| Exists         : LogicalExists
+	| Or             : LogicalBinary
+	| And            : LogicalBinary
+	| Not            : LogicalUnary
+	| Equal          : ExpLogicalBinary
+    | NotEqual       : ExpLogicalBinary
+	| LessEqual      : ExpLogicalBinary
+	| Less           : ExpLogicalBinary
+	| GreaterEqual   : ExpLogicalBinary
+	| Greater        : ExpLogicalBinary
+  }
+
+  abstract ast Unary : Expression 
+  { 
+    Expr1 : Expression; 
+  }   
+
+  abstract ast Binary : Expression 
+  { 
+    Expr1 : Expression; 
+	Expr2 : Expression; 
+  }   
+
+  abstract ast ConcatBinary : Binary
+  {
+  }
+
+  abstract ast SubQueryExpression : Expression
+  {
+    Query : Query;
+  }  
+
+  abstract ast Field
+  {
+    | SingleField { FieldName : QualifiedIdentifierPart; }
+	| TableLinkField { TableLinks : TableLink*; FieldName : QualifiedIdentifierPart;}
+  }
+
+  ast TableLink
+  {
+     LinkName : QualifiedIdentifierPart;
+	 LinkDelimiter : LinkDelimiter;
+  }
+
+  abstract ast LinkDelimiter
+  {
+    | FullJoin
+	| RightJoin
+	| LeftJoin
+	| DefaultJoin
   }
   
-  abstract ast Unary : Expr 
-  { 
-    Expr1 : Expr; 
-  }   
+  abstract ast Expression : BindableAst
+  {
+      | IntegerLiteral    { Value : int; }
+      | FloatLiteral      { Value : double; }
+      | StringLiteral     { Value : string; }
+      | DateLiteral       { Value : DateTime; }	  
+	  | SubQueryExpression
+	  | Null
+	  | FieldExpression   { Field : Field; }
+	  | Case {}
+	  | CountAll
+	  | FunCall           { FuncName : Field;  Arguments : Expression.Argument*;}
+	  | Argument          { Expr : Expression; }
+	  | Concat : ConcatBinary
+	  | Sum : Binary
+	  | Sub : Binary
+	  | Modulus : Binary
+	  | Multiply : Binary
+	  | Divide : Binary
+	  | Plus : Unary
+	  | Minus : Unary
+  }  
 }

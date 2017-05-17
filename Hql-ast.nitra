@@ -1,6 +1,5 @@
 using Nitra;
 using Nitra.Declarations;
-using System;
 
 namespace Hql
 {
@@ -11,34 +10,34 @@ namespace Hql
 
   ast Query
   {
-     SelectStm : SelectStm;
-	 Union     : string;
-	 UnionAll  : string;
+     SelectStms : SelectStm*;
+	 UnionTypes : UnionType*;
+  }
+
+  abstract ast UnionType
+  {
+    | Union 
+	| UnionAll
   }
 
   ast SelectStm
   {
-     FromClause : FromClause?;
+     FromClause   : FromClause?;
 	 SelectClause : SelectClause;
-	 WhereClause : WhereClause?;
-	 GroupClause : GroupClause?;
-	 OrderClause : OrderClause?;
+	 WhereClause  : WhereClause?;
+	 GroupClause  : GroupClause?;
+	 OrderClause  : OrderClause?;
   }  
 
   ast OrderClause
   {
-     OrderFields : OrderField;
-  }
-
-  abstract ast OrderFieldExpression : OrderField
-  {
-    Expression : Expression;
+     OrderFields : OrderField*;
   }
 
   abstract ast OrderField
   {
-    | OrderAsc : OrderFieldExpression
-    | OrderDesc : OrderFieldExpression
+    | OrderAsc  { Expression : Expression; }
+    | OrderDesc { Expression : Expression; }
   }
 
   ast GroupClause
@@ -76,9 +75,9 @@ namespace Hql
   }
 
   ast TableSource
-  {
-    TableSourceItem : TableSourceItem; 
-	JoinParts       : JoinPart*;
+  {     
+     TableSourceItem : TableSourceItem; 
+	 JoinParts       : JoinPart*;
   }
 
   abstract ast JoinPart
@@ -87,12 +86,7 @@ namespace Hql
 	| Link { TableNameFull : TableNameFull; }
   }
 
-  ast JoinType
-  {
-     Type : JoinTypes;
-  }
-
-  abstract ast JoinTypes
+  abstract ast JoinType
   {
     | Inner
 	| Left
@@ -117,44 +111,51 @@ namespace Hql
      Name : string;
   }
 
-  ast QualifiedIdentifier
+  abstract ast StringAlias
   {
-     QualifiedIdentifierParts : QualifiedIdentifierPartPair*;
+      | StringAliasQualifiedIdentifierPart { QualifiedIdentifierPart : QualifiedIdentifierPart; }
+	  | StringAliasStringLiteral { StringLiteralRule : StringLiteralRule; }
   }
 
-  ast QualifiedIdentifierPartPair
+  abstract ast StringLiteralRule
   {
-     QualifiedIdentifierPart : QualifiedIdentifierPart;
-	 Delimiter               : Delimiter;
+     | DoubleStringLiteralPartRule { Value : string; }
+	 | SingleStringLiteralPartRule { Value : string; }
+  }
+
+  ast QualifiedIdentifier
+  {
+     QualifiedIdentifierParts : QualifiedIdentifierPart*;
+	 Delimiters               : Delimiter*;
   }
 
   ast QualifiedIdentifierPart
   {
-     Reference : string;
+     Value : string;
   }
 
   abstract ast Delimiter
   {
-    |FullJoinDelimiter
-	|RightJoinDelimiter
-	|LeftJoinDelimiter
-	|DefaultJoinDelimiter
+    | FullJoinDelimiter
+	| RightJoinDelimiter
+	| LeftJoinDelimiter
+	| DefaultJoinDelimiter
   }
 
   abstract ast MyValues
   {
     | QueryExpression    { Query : Query;}
-	| BracketsExpression { ExpressionList : Expression*;}
+	| BracketsExpression { Expressions : Expression*;}
   }
 
   abstract ast LogicalUnary : LogicalExpression
   {
-      Expr1 : LogicalExpression;
+      Expr : LogicalExpression;
   }
 
   abstract ast ExpLogicalUnary : LogicalExpression
   {
-      Expr1 : Expression;
+      Expr : Expression;
   }
 
   abstract ast LogicalBinary : LogicalExpression
@@ -171,13 +172,12 @@ namespace Hql
 
   abstract ast LogicalIn : LogicalExpression
   {
-      Expr1  : Expression;
+      Expr  : Expression;
 	  Values : MyValues;
   }
 
   abstract ast LogicalExists : LogicalExpression
   {
-     Expr1 : Expression;
 	 Query : Query;
   }
 
@@ -203,23 +203,14 @@ namespace Hql
 
   abstract ast Unary : Expression 
   { 
-    Expr1 : Expression; 
+    Expr : Expression; 
   }   
 
   abstract ast Binary : Expression 
   { 
     Expr1 : Expression; 
 	Expr2 : Expression; 
-  }   
-
-  abstract ast ConcatBinary : Binary
-  {
-  }
-
-  abstract ast SubQueryExpression : Expression
-  {
-    Query : Query;
-  }  
+  }     
 
   abstract ast Field
   {
@@ -240,21 +231,27 @@ namespace Hql
 	| LeftJoin
 	| DefaultJoin
   }
+
+  ast CaseCondition
+  {
+     Condition : LogicalExpression;
+	 Then      : Expression; 
+  }
   
   abstract ast Expression : BindableAst
   {
       | IntegerLiteral    { Value : int; }
       | FloatLiteral      { Value : double; }
-      | StringLiteral     { Value : string; }
+      | StringLiteralRule { Value : string; }
       | DateLiteral       { Value : DateTime; }	  
-	  | SubQueryExpression
+	  | SubQueryExpression { Query : Query; }
 	  | Null
-	  | FieldExpression   { Field : Field; }
-	  | Case {}
+	  | FieldExpression { Field : Field; }
+	  | Case { Conditions : CaseCondition*; Else : Expression?; }
 	  | CountAll
-	  | FunCall           { FuncName : Field;  Arguments : Expression.Argument*;}
+	  | FunCall           { FuncName : Field;  Arguments : Expression*;}
 	  | Argument          { Expr : Expression; }
-	  | Concat : ConcatBinary
+	  | Concat : Binary
 	  | Sum : Binary
 	  | Sub : Binary
 	  | Modulus : Binary

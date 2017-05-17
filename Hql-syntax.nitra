@@ -78,14 +78,7 @@
     {
       | SimpleSingleEscapeSequenceStrPart    = SimpleSingleEscapeSequence;
       | SingleStringLiteralCharacterSequence = (!NotAllowedSingleStringLiteralChar Any)+;
-    } 
-
-    [SpanClass(String)]
-    token StringLiteral
-    { 
-      | DoubleStringLiteralPart =   "\"" DoubleStringLiteralPart* "\"" 
-      | SingleStringLiteralPart = "'" SingleStringLiteralPart* "'"
-    }
+    }     
     
     regex IdentifierStartCharacter   = LetterCharacter | "_";
     regex IdentifierMyPartCharacters = LetterCharacter | DecimalDigitCharacter;
@@ -93,14 +86,20 @@
     [ExplicitSpaces]
     syntax QualifiedIdentifierPart
     { 
-      | Reference
-      | QuotedReference = "[" Reference=(!"]" Any)+ "]"
+      | SingleReference = Reference
+      | QuotedReference = "[" Ref=(!"]" Any)+ "]"
+    }
+
+	syntax StringLiteralRule
+    { 
+      | DoubleStringLiteralPartRule = "\"" StringPart = (DoubleStringLiteralPart*) "\""
+      | SingleStringLiteralPartRule = "'" StringPart = (SingleStringLiteralPart*) "'"
     }
 
     syntax StringAlias
     { 
        | QualifiedIdentifierPart
-       | StringLiteral = StringLiteral
+       | StringLiteralRule
     }
         
 	syntax Delimiter
@@ -123,10 +122,10 @@
       | SingleField = QualifiedIdentifierPart;   
 
     precedence TableLinkAndField:
-      | TableLink = (QualifiedIdentifierPart s (&QIPredicate Delimiter s QualifiedIdentifierPart s)? (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
+      | TableLink = Prefix = (QualifiedIdentifierPart s (&QIPredicate Delimiter s QualifiedIdentifierPart s)? (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
     }
 
-    syntax Alias = ("as" sm)? StringAlias;
+    syntax Alias = ("as" sm)? StringAlias = StringAlias;
     
     [StartRule]
     syntax Start = Query;
@@ -139,9 +138,9 @@
 	  | UnionAll = "union" sm "all"
 	}
        
-    syntax SelectStm = FromClause? SelectClause WhereClause? GroupClause? OrderClause?;
+    syntax SelectStm = FromClause = FromClause? SelectClause WhereClause = WhereClause? GroupClause = GroupClause? OrderClause = OrderClause?;
 
-    syntax SelectClause = "select" sm (Distinct="distinct" sm)? ColumnList=(Column; "," sm)+ nl;
+    syntax SelectClause = "select" sm Distinct=("distinct" sm)? (Column; "," sm)+ nl;
 
     syntax Column
     {	
@@ -153,9 +152,9 @@
        | ExpressionWithAlias = Expression Alias
     }
   
-    syntax FromClause = "from" sm TableSources;
+    syntax FromClause = "from" sm (TableSource; ",")*;
 
-	syntax TableSources = (TableSource; ",")*;
+	// syntax TableSources = (TableSource; ",")*;
 	
 	syntax TableSource
 	{
@@ -173,13 +172,13 @@
 
 	syntax JoinPart
 	{
-	   | Join = JoinType = JoinType? "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
+	   | Join = JoinType = JoinType "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
 	   | Link = "link" sm TableNameFull nl
 	}
     
     syntax SubQuery = "(" Query ")" sm Alias sm;
 
-    syntax TableNameFull = TableName=QualifiedIdentifier sm Alias=(Alias sm)?;
+    syntax TableNameFull = TableName=QualifiedIdentifier sm (Alias sm)?;
 
 	syntax OuterJoinType
 	{
@@ -215,6 +214,8 @@
     }       
 
 	regex ComparsionOperator = "=" | "<>" | "<=" | "<" | ">=" | ">";
+
+	syntax CaseCondition = "when" sm Condition=LogicalExpression sm "then" sm Then=Expression nl;
 
 	syntax LogicalExpression
 	{
@@ -253,8 +254,6 @@
 	  | Greater      = Expression sm ">" sm Expression
 	}
 
-	syntax Argument = Expression;
-
     syntax Expression
     {
       | Braces         = "(" Expression ")"
@@ -262,14 +261,14 @@
 
       | IntegerLiteral
       | FloatLiteral
-      | StringLiteral
+      | StringLiteralRule
       | DateLiteral    = "#" DateLiteral
            
       | Null           = "null"
       | Field          = Field
-      | Case           = "case" nl ("when" sm Condition=LogicalExpression sm "then" sm Then=Expression nl)+ ("else" sm Else=Expression nl)? "end" nl 
+      | Case           = "case" nl Conditions = (CaseCondition)+ Else = ("else" sm Expression = Expression nl)? "end" nl 
       | CountAll       = "count" "(" "*" ")" 
-      | FunCall        = FuncName = Field "(" (Argument; "," sm)* ")"
+      | FunCall        = FuncName = Field "(" (Expression; "," sm)* ")"
 
     precedence Concat:      
       | Concat       =  Expression sm "&" sm Expression

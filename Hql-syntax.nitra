@@ -53,6 +53,7 @@
     [SpanClass(Number)]
     regex FloatLiteral                         = Digit* "." Digit+;
     [ExplicitSpaces]
+	[SpanClass(Number)]
     regex DateLiteral                         =   "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit "\""
                                                 | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit "'"
                                                 | "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit ":" Digit Digit "\""
@@ -68,6 +69,7 @@
 
     regex NotAllowedSingleStringLiteralChar   = NewLineCharacter | "'" | "\\";    
 
+	[SpanClass(String)]
     token DoubleStringLiteralPart
     {
       | SimpleDoubleEscapeSequenceStrPart     = SimpleDoubleEscapeSequence;
@@ -122,7 +124,8 @@
       | SingleField = QualifiedIdentifierPart;   
 
     precedence TableLinkAndField:
-      | TableLink = Prefix = (QualifiedIdentifierPart s (&QIPredicate Delimiter s QualifiedIdentifierPart s)? (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
+	    | TableLink = Prefix = (QualifiedIdentifierPart s (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
+      //| TableLink = Prefix = (QualifiedIdentifierPart s (&QIPredicate Delimiter s QualifiedIdentifierPart s)? (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
     }
 
     syntax Alias = ("as" sm)? StringAlias = StringAlias;
@@ -140,7 +143,7 @@
        
     syntax SelectStm = FromClause = FromClause? SelectClause WhereClause = WhereClause? GroupClause = GroupClause? OrderClause = OrderClause?;
 
-    syntax SelectClause = "select" sm Distinct=("distinct" sm)? (Column; "," sm)+ nl;
+    syntax SelectClause = SelectSpan="select" sm Distinct=(DistinctSpan="distinct" sm)? (Column; "," sm)+ nl;
 
     syntax Column
     {	
@@ -178,7 +181,7 @@
     
     syntax SubQuery = "(" Query ")" sm Alias sm;
 
-    syntax TableNameFull = TableName=QualifiedIdentifier sm (Alias sm)?;
+    syntax TableNameFull = TableName=QualifiedIdentifier sm Alias=(Alias sm)?;
 
 	syntax OuterJoinType
 	{

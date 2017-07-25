@@ -33,7 +33,7 @@ namespace Hql
 
    map syntax HqlSyntax.FromClause -> FromClause
    {
-      TableSources.Item1 -> TableSources;
+      this.TableSources.Item1 -> TableSources;
    }
 
    map syntax HqlSyntax.TableSource -> TableSource
@@ -51,14 +51,15 @@ namespace Hql
    map syntax HqlSyntax.JoinType -> JoinType
    {
      | Inner -> Inner {}
-	 | OuterJoin {
-	                match(this.OuterJoinType)
-	                {
-					  | Left -> Left {}
-					  | Right -> Right {}
-					  | Full -> Full {}
-					}
-				 }
+	 | OuterJoin 
+		 {
+		   match(this.OuterJoinType)
+		   {
+			 | Left -> Left {}
+			 | Right -> Right {}						  
+			 | Full -> Full {}
+		   }
+		 }
    }
 
    map syntax HqlSyntax.TableSourceItem -> TableSourceItem
@@ -69,8 +70,12 @@ namespace Hql
 
    map syntax HqlSyntax.TableNameFull -> TableNameFull
    {
-      TableName -> TableName;
-	  Alias = ParsedValue(Alias, GetText(Alias));
+      this.TableName -> TableName;
+	  match(this.Alias)
+			 {
+			   | Some(value) -> Some(value)
+			   | None() -> None()
+			 } -> Alias;
    }
 
    map syntax HqlSyntax.QualifiedIdentifier -> QualifiedIdentifier
@@ -80,9 +85,15 @@ namespace Hql
    }
 
    map syntax HqlSyntax.QualifiedIdentifierPart -> QualifiedIdentifierPart
-   {
-      | SingleReference = Value = GetText(this);
-	  | QuotedReference = Value = GetText(this.Ref);
+   {      
+        | SingleReference 
+			{
+			  Value = ParsedValue(this.Reference.Span, GetText(this.Reference.Span));
+			}
+	    | QuotedReference 
+			{
+			  Value = ParsedValue(this.Ref, GetText(this.Ref));
+			}
    }
 
    map syntax HqlSyntax.Delimiter -> Delimiter
@@ -93,39 +104,48 @@ namespace Hql
 	  | DefaultJoin -> DefaultJoinDelimiter {}
    }
 
+   
+   //map syntax HqlSyntax.Alias -> Alias
+   //{
+   //   Name = match (this.StringAlias)
+//	  {
+//	    | QualifiedIdentifierPart -> match(this)
+//		                             {
+//									   | SingleReference => Reference
+//									   | QuotedReference => ParsedValue(this.Ref, GetText(this.Ref))
+//									 }
+//		| StringLiteralRule -> match(this)
+//		                       {
+//							     | DoubleStringLiteralPartRule => GetText(this)
+//								 | SingleStringLiteralPartRule => GetText(this)
+//							   }
+//	  };
+//   }
+   
+
    map syntax HqlSyntax.Alias -> Alias
    {
-      Name = match (this.StringAlias)
-	  {
-	    | QualifiedIdentifierPart => match(this.QualifiedIdentifierPart)
-		                             {
-									   | SingleReference => ParsedValue(Reference, GetText(Reference))
-									   | QuotedReference => ParsedValue(this.Ref, GetText(this.Ref))
-									 }
-		| StringLiteralRule => match(this)
-		                       {
-							     | DoubleStringLiteralPartRule => GetText(this)
-								 | SingleStringLiteralPartRule => GetText(this)
-							   }
-	  };
+      Name = ParsedValue(NSpan(0), "ddd");
    }
 
    map syntax HqlSyntax.SelectClause -> SelectClause
    {
-      Distinct = ParsedValue(Distinct, match(Distinct)
+      Distinct = ParsedValue(this.Span
+	              , match(Distinct)
 	             {
-				   | None => false
-				   | Some(_) => true
+				   | None() => false
+				   | _ => true
 				 });
-	  Columns.Item1 -> Columns;
+
+	  this.Columns.Item1 -> Columns;
    }
 
    map syntax HqlSyntax.Column -> Column
    {
      | AllTabAllFields -> AllTabAllFields {}
-	 | OneTabAllFields -> OneTabAllFields { QualifiedIdentifier -> TableName;}
-	 | Expression -> ColumnExpressionWithAlias { Expression -> Expression; Alias = ParsedValue(null, string.Empty); }
-	 | ExpressionWithAlias -> ColumnExpressionWithAlias { Expression -> Expression; Alias = ParsedValue(Alias.StringAlias, GetText(Alias.StringAlias)); }
+	 | OneTabAllFields -> OneTabAllFields { this.QualifiedIdentifier -> TableName;}
+	 | Expression -> ColumnExpressionWithAlias { Expression -> Expression; None() -> Alias; }
+	 | ExpressionWithAlias -> ColumnExpressionWithAlias { Expression -> Expression; Some(Alias) -> Alias; }
    }
 
    map syntax HqlSyntax.OrderClause -> OrderClause
@@ -135,97 +155,124 @@ namespace Hql
 
    map syntax HqlSyntax.OrderField -> OrderField
    {
-     | OrderAsc -> OrderAsc { Expression -> Expression; }
-	 | OrderDesc -> OrderDesc { Expression -> Expression; }
+     | OrderAsc -> OrderAsc { this.Expression -> Expression; }
+	 | OrderDesc -> OrderDesc { this.Expression -> Expression; }
    }
 
    map syntax HqlSyntax.GroupClause -> GroupClause
    {
-      GroupList.Item1 -> Expressions;
-	  HavingClause -> HavingClause; 
+      this.GroupList.Item1 -> Expressions;
+	  this.HavingClause -> HavingClause; 
    }
    
    map syntax HqlSyntax.HavingClause -> HavingClause
    {
-      LogicalExpression -> LogicalExpression;
+      this.LogicalExpression -> LogicalExpression;
    }
 
    map syntax HqlSyntax.WhereClause -> WhereClause
    {
-      LogicalExpression -> LogicalExpression;
+      this.LogicalExpression -> LogicalExpression;
    }
 
    map syntax HqlSyntax.MyValues -> MyValues
    {
-     | QueryExpression -> QueryExpression { Query -> Query; }
-	 | BracketsExpression -> BracketsExpression { Expressions.Item1 -> Expressions; }
+     | QueryExpression -> QueryExpression { this.Query -> Query; }
+	 | BracketsExpression -> BracketsExpression { this.Expressions.Item1 -> Expressions; }
    }
 
    map syntax HqlSyntax.LogicalExpression -> LogicalExpression
    {
      | Braces -> this.LogicalExpression
-	 | ValueIsNotNull { Expression -> Expr; }
-	 | ValueIsNull { Expression -> Expr; }
-	 | Like { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | NotLike { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | In { Expression -> Expr; MyValues -> Values; }
-	 | NotIn { Expression -> Expr; MyValues -> Values; } 
-	 | Exists  { Query -> Query; }
-	 | Or { LogicalExpression1 -> Expr1; LogicalExpression2 -> Expr2; }
-	 | And { LogicalExpression1 -> Expr1; LogicalExpression2 -> Expr2; }
-	 | Not { LogicalExpression -> Expr; }
-	 | Equal { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | NotEqual { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | LessEqual { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | Less { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | GreaterEqual { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | Greater { Expression1 -> Expr1; Expression2 -> Expr2; }
+	 | ValueIsNotNull { this.Expression -> Expr; }
+	 | ValueIsNull { this.Expression -> Expr; }
+	 | Like { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | NotLike { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | In { this.Expression -> Expr; this.MyValues -> Values; }
+	 | NotIn { this.Expression -> Expr; this.MyValues -> Values; } 
+	 | Exists  { this.Query -> Query; }
+	 | Or { this.LogicalExpression1 -> Expr1; this.LogicalExpression2 -> Expr2; }
+	 | And { this.LogicalExpression1 -> Expr1; this.LogicalExpression2 -> Expr2; }
+	 | Not { this.LogicalExpression -> Expr; }
+	 | Equal { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | NotEqual { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | LessEqual { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | Less { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | GreaterEqual { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | Greater { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
    }
 
    map syntax HqlSyntax.CaseCondition -> CaseCondition
    {
-      Condition -> Condition;
-	  Then -> Then;
+      this.Condition -> Condition;
+	  this.Then -> Then;
    }
 
    map syntax HqlSyntax.Field -> Field
    {
-     | SingleField -> SingleField { QualifiedIdentifierPart -> FieldName;}
-	 | TableLink =
-	   { 	     
-	     def args = array((this.Prefix.Count-1) * 2 + 1);
-		 foreach (rs in this.Prefix with index)
-           args[index] = TableLink(this.Location.WithSpan(NSpan(rs.EndPos)), rs.Item2, rs.Item1);	   
-		 TableLinkField(this.Location.WithSpan(NSpan(this.TableLink)), args, this.Field)
-       }
+     | SingleField -> SingleField { this.QualifiedIdentifierPart -> FieldName;}
+	 | TableLink -> TableLinkField { [] -> TableLinks; this.Field -> FieldName; }
    }
+
+//   map syntax HqlSyntax.Field -> Field
+//   {
+//     | SingleField -> SingleField { this.QualifiedIdentifierPart -> FieldName;}
+//	 | TableLink =
+//	   { 	     
+//	     def args = array((this.Prefix.Count-1) * 2 + 1);
+//		 foreach (rs in this.Prefix with index)
+//		 {
+//		   def qualifiedPart : QualifiedIdentifierPartHolder = QualifiedIdentifierPartHolder { rs.Item1 -> QualifiedIdentifierPart };		   
+//           args[index] = TableLink(this.Location.WithSpan(NSpan(0)), 
+//		   qualifiedPart.QualifiedIdentifierPart,
+//		   match(rs.Item2)
+//		   {
+//             | Some(value) -> Some(value)
+//			 | None() -> None(value)
+//		   });	   
+//		 }
+//		 TableLinkField(this.Location.WithSpan(NSpan(0)), args, this.Field)
+//       }
+//   }
 
    map syntax HqlSyntax.Expression -> Expression
    {
      | Braces -> this.Expression
 	 | Query -> SubQueryExpression { this.Query -> Query; }
-	 | IntegerLiteral { Value = ParsedValue(this, int.Parse(GetText(this))); }
-	 | FloatLiteral { Value = ParsedValue(this, double.Parse(GetText(this))); }
-     | StringLiteralRule { Value = match(this)
-								   {
-							         | DoubleStringLiteralPartRule => ParsedValue(this.DoubleStringLiteralParts,GetText(this.DoubleStringLiteralParts))
-								     | SingleStringLiteralPartRule => ParsedValue(this.SingleStringLiteralParts,GetText(this.SingleStringLiteralParts))
-							       };
+	 | IntegerLiteral { Value = ParsedValue(this.IntegerLiteral, int.Parse(GetText(this.IntegerLiteral))); }
+	 | FloatLiteral { Value = ParsedValue(this.FloatLiteral, double.Parse(GetText(this.FloatLiteral))); }
+     | StringLiteralRule 
+	                     { 
+						   Value = ParsedValue(NSpan(0), "ddd");
+	                       //match(this)
+						//	{
+						//      | DoubleStringLiteralPartRule =>
+						//		  ParsedValue(DoubleStringLiteralPartRule.StringPart,GetText(this.DoubleStringLiteralPartRule.StringPart));
+						//	  | SingleStringLiteralPartRule =>
+						//	       ParsedValue(this.StringPart, GetText(this.StringPart));
+						//	};
 						 }
-	 | DateLiteral { Value = ParsedValue(this, DateTime.Parse(GetText(this))); }
+	 | DateLiteral { Value = ParsedValue(this.DateLiteral, System.DateTime.Parse(GetText(this.DateLiteral))); }
 	 | Null {}
-	 | Field -> FieldExpression { Field = Field; }
-	 | Case { Conditions -> Conditions; Else -> Else; }
+	 | Field -> FieldExpression { Field -> Field; }
+	 | Case { 
+	         this.Conditions -> Conditions; 
+			 match(this.Else)
+			 {
+			   | Some(value) -> Some(value.Item2)
+			   | None() -> None()
+			 } -> Else;
+			}	         
 	 | CountAll {}
-	 | FunCall { FuncName -> FuncName; Expressions.Item1 -> Arguments; }
-	 | Concat { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | Sum { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | Sub { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | Modulus { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | Multiply { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | Divide { Expression1 -> Expr1; Expression2 -> Expr2; }
-	 | Plus { Expression -> Expr; }
-	 | Minus { Expression -> Expr; }
+	 | FunCall { this.FuncName -> FuncName; this.Expressions.Item1 -> Arguments; }
+	 | Concat { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | Sum { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | Sub { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | Modulus { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | Multiply { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | Divide { this.Expression1 -> Expr1; this.Expression2 -> Expr2; }
+	 | Plus { this.Expression -> Expr; }
+	 | Minus { this.Expression -> Expr; }
    }
 
 }

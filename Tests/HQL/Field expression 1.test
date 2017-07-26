@@ -1,2 +1,2 @@
 from Document d
-select d.Resolution<-Author.Name
+select d.Resolution<-Author.Name,bbb,jj->ii.i

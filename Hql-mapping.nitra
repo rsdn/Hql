@@ -252,7 +252,12 @@ namespace Hql
 						//	       ParsedValue(this.StringPart, GetText(this.StringPart));
 						//	};
 						 }
-	 | DateLiteral { Value = ParsedValue(this.DateLiteral, System.DateTime.Parse(GetText(this.DateLiteral))); }
+	 | DateLiteral { 
+	 Value = ParsedValue(this.DateLiteral, 
+	                                     System.DateTime.ParseExact(GetText(this.DateLiteral).Substring(1, GetText(this.DateLiteral).Length-2) ,
+										         array ["dd.MM.yyyy", "dd.MM.yyyy hh:mm", "dd.MM.yyyy hh:mm:ss"],
+												 null, DateTimeStyles.None)); 
+				  }
 	 | Null {}
 	 | Field -> FieldExpression { Field -> Field; }
 	 | Case { 

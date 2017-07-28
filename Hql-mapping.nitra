@@ -107,21 +107,7 @@ namespace Hql
    
    map syntax HqlSyntax.Alias -> Alias
    {       
-     Name =  match(this.StringAlias)
-	                     {
-	                       | QualifiedIdentifierPart -> 
-						   match(this)
-						     {
-							   | SingleReference = ParsedValue(this.Reference.Span, GetText(this.Reference.Span));
-							   | QuotedReference = ParsedValue(this.Ref.Span, GetText(this.Ref));
-							 };
-		                   | StringLiteralRule -> 
-						   match(this)
-		                       {
-							     | DoubleStringLiteralPartRule = ParsedValue(this.StringPart, GetText(this.StringPart));
-								 | SingleStringLiteralPartRule = ParsedValue(this.StringPart, GetText(this.StringPart));
-							   };							   
-	                      };
+     Name =  ParsedValue(this.StringAlias.Span, this.StringAlias.Value());
    }
    
 

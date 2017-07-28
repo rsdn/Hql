@@ -43,8 +43,8 @@
                          | "end";
   
     [Keyword]   token Keyword   = Name=KeywordToken !IdentifierPartCharacters;
-    [Reference] token Reference = !Keyword IdentifierBody;
-    [Name]      token Name      = !Keyword IdentifierBody;
+    token Reference = !Keyword IdentifierBody { map Nitra.Declarations.Reference = Nitra.Declarations.Reference(this); }
+    token Name      = !Keyword IdentifierBody { map Nitra.Declarations.Name      = Nitra.Declarations.Name(this); }
     
     // Literals
     regex Digit                               = ['0'..'9'];
@@ -87,23 +87,79 @@
 
     [ExplicitSpaces]
     syntax QualifiedIdentifierPart
-    { 
+    {
+      Value() : string;
+      missing Value = "";
+
       | SingleReference = Reference
+        {
+          override Value = GetText(Reference.Span);
+        }
+
       | QuotedReference = "[" Ref=(!"]" Any)+ "]"
+        {
+          override Value = GetText(Ref);
+        }
     }
 
 	syntax StringLiteralRule
     { 
+      Value() : string;
+      missing Value = "";
+
       | DoubleStringLiteralPartRule = "\"" StringPart = (DoubleStringLiteralPart*) "\""
+        {
+          override Value
+          {
+            def buffer = System.Text.StringBuilder();
+            foreach (part in StringPart)
+            {
+              _ = match (part.GetText())
+              {
+                | "\\\\" => buffer.Append('\\')
+                | "\\\"" => buffer.Append('"')
+                | x      => buffer.Append(x)
+              }
+            }
+            buffer.ToString()
+          }
+        }
+
       | SingleStringLiteralPartRule = "'" StringPart = (SingleStringLiteralPart*) "'"
+        {
+          override Value
+          {
+            def buffer = System.Text.StringBuilder();
+            foreach (part in StringPart)
+            {
+              _ = match (part.GetText())
+              {
+                | "\\\\" => buffer.Append('\\')
+                | "\\'"  => buffer.Append('\'')
+                | x      => buffer.Append(x)
+              }
+            }
+            buffer.ToString()
+          }
+        }
     }
 
     syntax StringAlias
     { 
+        Value() : string;
+        missing Value = "";
+
        | QualifiedIdentifierPart
+         {
+           override Value = QualifiedIdentifierPart.Value();
+         }
+
        | StringLiteralRule
+         {
+           override Value = StringLiteralRule.Value();
+         }
     }
-        
+
 	syntax Delimiter
 	{
 	   | FullJoin = "^"

@@ -110,12 +110,6 @@ namespace Hql
      Name =  ParsedValue(this.StringAlias.Span, this.StringAlias.Value());
    }
    
-
-//   map syntax HqlSyntax.Alias -> Alias
-//   {
-//      Name = ParsedValue(NSpan(0), "ddd");
-//   }
-
    map syntax HqlSyntax.SelectClause -> SelectClause
    {
       Distinct = ParsedValue(this.Span
@@ -199,7 +193,7 @@ namespace Hql
    map syntax HqlSyntax.Field -> Field
    {
      | SingleField -> SingleField { this.QualifiedIdentifierPart -> FieldName;}
-	 | TableLink -> TableLinkField { [] -> TableLinks; this.Field -> FieldName; }
+	 | TableLink -> TableLinkField { this.Prefix -> TableLinks { this.Item1 -> LinkName; this.Item2 -> LinkDelimiter; };  this.Field -> FieldName; } }
    }
 
 //   map syntax HqlSyntax.Field -> Field
@@ -207,19 +201,19 @@ namespace Hql
 //     | SingleField -> SingleField { this.QualifiedIdentifierPart -> FieldName;}
 //	 | TableLink =
 //	   { 	     
-//	     def args = array((this.Prefix.Count-1) * 2 + 1);
+//	     def args = array(this.Prefix.Count);
 //		 foreach (rs in this.Prefix with index)
 //		 {
-//		   def qualifiedPart : QualifiedIdentifierPartHolder = QualifiedIdentifierPartHolder { rs.Item1 -> QualifiedIdentifierPart };		   
-//           args[index] = TableLink(this.Location.WithSpan(NSpan(0)), 
+//		   def qualifiedPart : QualifiedIdentifierPartHolder = QualifiedIdentifierPartHolder(rs.Item1 -> QualifiedIdentifierPart);		   
+//           args[index] = TableLink(rs.Location, 
 //		   qualifiedPart.QualifiedIdentifierPart,
 //		   match(rs.Item2)
 //		   {
 //             | Some(value) -> Some(value)
-//			 | None() -> None(value)
+//			 | None() -> None()
 //		   });	   
-//		 }
-//		 TableLinkField(this.Location.WithSpan(NSpan(0)), args, this.Field)
+//		 };
+//		 TableLinkField(this.Location.WithSpan(NSpan(0)), args, this.Field);
 //       }
 //   }
 

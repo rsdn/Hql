@@ -220,7 +220,7 @@ namespace Hql
   abstract ast Field
   {
     | SingleField { FieldName : QualifiedIdentifierPart; }
-	| TableLinkField { TableLinks : TableLink*; FieldName : QualifiedIdentifierPart;}
+	| TableLinkField { TableLinks : TableLink+; FieldName : QualifiedIdentifierPart;}
   }
 
   ast TableLink

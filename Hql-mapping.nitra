@@ -193,8 +193,32 @@ namespace Hql
    map syntax HqlSyntax.Field -> Field
    {
      | SingleField -> SingleField { this.QualifiedIdentifierPart -> FieldName;}
-	 | TableLink -> TableLinkField { this.Prefix -> TableLinks { this.Item1 -> LinkName; this.Item2 -> LinkDelimiter; };  this.Field -> FieldName; } }
+	 | TableLink -> TableLinkField { this.TableLinkAndDelimitersIn -> TableLinks; this.Field -> FieldName; }
    }
+
+   //map syntax HqlSyntax.TableLinkAndDelimiters -> TableLink*
+   //{
+   //   TableLinkAndDelimiter -> TableLink;
+   //}
+
+   map syntax HqlSyntax.TableLinkAndDelimiter -> TableLink
+   {
+       QualifiedIdentifierPart -> LinkName;
+	   match(TableDelimiter)
+			 {
+			   | Some(value) -> Some(value)
+			   | None() -> None()
+			 } -> LinkDelimiter;
+	 //| Delimiter -> LinkDelimiter
+   }
+
+//   map syntax HqlSyntax.Delimiter -> LinkDelimiter
+//   {
+//     | FullJoin -> FullJoin {}
+//	 | RightJoin -> RightJoin {}
+//	 | LeftJoin -> LeftJoin {}
+//	 | DefaultJoin -> DefaultJoin {}
+//   }
 
 //   map syntax HqlSyntax.Field -> Field
 //   {

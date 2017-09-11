@@ -220,21 +220,13 @@ namespace Hql
   abstract ast Field
   {
     | SingleField { FieldName : QualifiedIdentifierPart; }
-	| TableLinkField { TableLinks : TableLink+; FieldName : QualifiedIdentifierPart;}
+	| TableLinkField { TableLinks : TableLink*; FieldName : QualifiedIdentifierPart;}
   }
 
   ast TableLink
   {
      LinkName : QualifiedIdentifierPart;
-	 LinkDelimiter : LinkDelimiter?;
-  }
-
-  abstract ast LinkDelimiter
-  {
-    | FullJoin
-	| RightJoin
-	| LeftJoin
-	| DefaultJoin
+	 LinkDelimiter : Delimiter?;
   }
 
   ast CaseCondition

@@ -171,16 +171,20 @@
 
     [ExplicitSpaces]
     syntax QualifiedIdentifier = (QualifiedIdentifierPart; s Delimiter s)+;
+
+	syntax QIPredicate = Delimiter s QualifiedIdentifierPart s Delimiter;
+
+	syntax TableLinkAndDelimiter = QualifiedIdentifierPart s TableDelimiter=((&QIPredicate Delimiter s)?);
+
+	syntax TableLinkAndDelimiters = (TableLinkAndDelimiter)+;
     
     [ExplicitSpaces]
     syntax Field
     {
-      syntax QIPredicate = Delimiter s QualifiedIdentifierPart s Delimiter;
-
       | SingleField = QualifiedIdentifierPart;   
 
     precedence TableLinkAndField:
-	    | TableLink = Prefix = (QualifiedIdentifierPart s (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
+	    | TableLink = TableLinkAndDelimitersIn = (TableLinkAndDelimiter+) "." s Field = QualifiedIdentifierPart;	   
       //| TableLink = Prefix = (QualifiedIdentifierPart s (&QIPredicate Delimiter s QualifiedIdentifierPart s)? (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
     }
 

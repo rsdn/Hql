@@ -196,11 +196,6 @@ namespace Hql
 	 | TableLink -> TableLinkField { this.TableLinkAndDelimitersIn -> TableLinks; this.Field -> FieldName; }
    }
 
-   //map syntax HqlSyntax.TableLinkAndDelimiters -> TableLink*
-   //{
-   //   TableLinkAndDelimiter -> TableLink;
-   //}
-
    map syntax HqlSyntax.TableLinkAndDelimiter -> TableLink
    {
        QualifiedIdentifierPart -> LinkName;
@@ -209,60 +204,22 @@ namespace Hql
 			   | Some(value) -> Some(value)
 			   | None() -> None()
 			 } -> LinkDelimiter;
-	 //| Delimiter -> LinkDelimiter
    }
 
-//   map syntax HqlSyntax.Delimiter -> LinkDelimiter
-//   {
-//     | FullJoin -> FullJoin {}
-//	 | RightJoin -> RightJoin {}
-//	 | LeftJoin -> LeftJoin {}
-//	 | DefaultJoin -> DefaultJoin {}
-//   }
-
-//   map syntax HqlSyntax.Field -> Field
-//   {
-//     | SingleField -> SingleField { this.QualifiedIdentifierPart -> FieldName;}
-//	 | TableLink =
-//	   { 	     
-//	     def args = array(this.Prefix.Count);
-//		 foreach (rs in this.Prefix with index)
-//		 {
-//		   def qualifiedPart : QualifiedIdentifierPartHolder = QualifiedIdentifierPartHolder(rs.Item1 -> QualifiedIdentifierPart);		   
-//           args[index] = TableLink(rs.Location, 
-//		   qualifiedPart.QualifiedIdentifierPart,
-//		   match(rs.Item2)
-//		   {
-//             | Some(value) -> Some(value)
-//			 | None() -> None()
-//		   });	   
-//		 };
-//		 TableLinkField(this.Location.WithSpan(NSpan(0)), args, this.Field);
-//       }
-//   }
 
    map syntax HqlSyntax.Expression -> Expression
    {
      | Braces -> this.Expression
 	 | Query -> SubQueryExpression { this.Query -> Query; }
 	 | IntegerLiteral { Value = ParsedValue(this.IntegerLiteral, int.Parse(GetText(this.IntegerLiteral))); }
-	 | FloatLiteral { Value = ParsedValue(this.FloatLiteral, double.Parse(GetText(this.FloatLiteral))); }
-     | StringLiteralRule 
-	                     { 
-						   Value = ParsedValue(NSpan(0), "ddd");
-	                       //match(this)
-						//	{
-						//      | DoubleStringLiteralPartRule =>
-						//		  ParsedValue(DoubleStringLiteralPartRule.StringPart,GetText(this.DoubleStringLiteralPartRule.StringPart));
-						//	  | SingleStringLiteralPartRule =>
-						//	       ParsedValue(this.StringPart, GetText(this.StringPart));
-						//	};
-						 }
+	 | FloatLiteral { Value = ParsedValue(this.FloatLiteral, double.Parse(GetText(this.FloatLiteral), NumberStyles.Any, CultureInfo.InvariantCulture)); }
+     | StringLiteralRule { Value = ParsedValue(this.StringLiteralRule.Span, this.StringLiteralRule.Value()); }
 	 | DateLiteral { 
-	 Value = ParsedValue(this.DateLiteral, 
-	                                     System.DateTime.ParseExact(GetText(this.DateLiteral).Substring(1, GetText(this.DateLiteral).Length-2) ,
-										         array ["dd.MM.yyyy", "dd.MM.yyyy hh:mm", "dd.MM.yyyy hh:mm:ss"],
-												 null, DateTimeStyles.None)); 
+	                  Value = ParsedValue(this.DateLiteral, 
+	                                      System.DateTime.ParseExact(GetText(this.DateLiteral).Substring(1, GetText(this.DateLiteral).Length-2),
+										  array ["dd.MM.yyyy", "dd.MM.yyyy hh:mm", "dd.MM.yyyy hh:mm:ss"],
+									      null, 
+										  DateTimeStyles.None)); 
 				  }
 	 | Null {}
 	 | Field -> FieldExpression { Field -> Field; }

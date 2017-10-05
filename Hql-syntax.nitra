@@ -203,7 +203,7 @@
        
     syntax SelectStm = FromClause = FromClause? SelectClause WhereClause = WhereClause? GroupClause = GroupClause? OrderClause = OrderClause?;
 
-    syntax SelectClause = SelectSpan="select" sm Distinct=(DistinctSpan="distinct" sm)? (Column; "," sm)+ nl;
+    syntax SelectClause = SelectSpan="select" sm Distinct=(("distinct" sm)?) (Column; "," sm)+ nl;
 
     syntax Column
     {	

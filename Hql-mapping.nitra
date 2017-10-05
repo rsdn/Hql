@@ -112,12 +112,8 @@ namespace Hql
    
    map syntax HqlSyntax.SelectClause -> SelectClause
    {
-      Distinct = ParsedValue(this.Span
-	              , match(Distinct)
-	             {
-				   | None() => false
-				   | _ => true
-				 });
+      Distinct = ParsedValue(if (this.Distinct.HasValue) this.Distinct.Value else NSpan(0)
+	                         , this.Distinct.HasValue);	
 
 	  this.Columns.Item1 -> Columns;
    }

@@ -1,7 +1,11 @@
-﻿language NitraHql
+﻿using Hql;
+
+language NitraHql
 {
   //span class DateTime         { ForegroundColor=Maroon; }
 
-  syntax module Hql.HqlSyntax start rule Start;
+  extension = .hql;
+
+  syntax module HqlSyntax start rule Start;
 }
 

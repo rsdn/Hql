@@ -45,6 +45,11 @@
     [Keyword]   token Keyword   = Name=KeywordToken !IdentifierPartCharacters;
     token Reference = !Keyword IdentifierBody { map Nitra.Declarations.Reference = Nitra.Declarations.Reference(this); }
     token Name      = !Keyword IdentifierBody { map Nitra.Declarations.Name      = Nitra.Declarations.Name(this); }
+
+	extend token IgnoreToken
+    {
+      | [SplitAtCompletionPosition] SpaceToken = Spaces;
+    }
     
     // Literals
     regex Digit                               = ['0'..'9'];
@@ -168,8 +173,6 @@
 	   | DefaultJoin = "."
 	}
 
-
-    [ExplicitSpaces]
     syntax QualifiedIdentifier = (QualifiedIdentifierPart; s Delimiter s)+;
 
 	syntax QIPredicate = Delimiter s QualifiedIdentifierPart s Delimiter;
@@ -189,8 +192,7 @@
     }
 
     syntax Alias = ("as" sm)? StringAlias = StringAlias;
-    
-    [StartRule]
+        
     syntax Start = Query;
 
 	syntax Query = (SelectStm; UnionType nl)*;
@@ -215,7 +217,7 @@
        | ExpressionWithAlias = Expression Alias
     }
   
-    syntax FromClause = "from" sm (TableSource; ",")*;
+    syntax FromClause = "from" sm TableSource;
 
 	// syntax TableSources = (TableSource; ",")*;
 	
@@ -235,8 +237,9 @@
 
 	syntax JoinPart
 	{
-	   | Join = JoinType = JoinType "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
-	   | Link = "link" sm TableNameFull nl
+	   | Join = JoinType = JoinType sm "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
+	   | Link = "link" sm TableSource nl
+	   | List = "," sm TableSource nl
 	}
     
     syntax SubQuery = "(" Query ")" sm Alias sm;

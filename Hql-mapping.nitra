@@ -33,7 +33,7 @@ namespace Hql
 
    map syntax HqlSyntax.FromClause -> FromClause
    {
-      this.TableSources.Item1 -> TableSources;
+      this.TableSource -> TableSource;
    }
 
    map syntax HqlSyntax.TableSource -> TableSource
@@ -44,8 +44,9 @@ namespace Hql
 
    map syntax HqlSyntax.JoinPart -> JoinPart
    {
-     | Join -> Join { this.JoinType -> JoinType; this.RightTableSource -> RightTable; this.LogicalExpression -> Expression; }
-	 | Link -> Link { this.TableNameFull -> TableNameFull; } 
+     | Join -> Join { this.JoinType -> JoinType; this.RightTableSource -> TableSource; this.LogicalExpression -> Expression; }
+	 | Link -> Link { this.TableSource -> TableSource; } 
+	 | List -> JoinList { this.TableSource -> TableSource; } 
    }
    
    map syntax HqlSyntax.JoinType -> JoinType

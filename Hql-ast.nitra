@@ -9,7 +9,7 @@ namespace Hql
   }
 
   ast Query
-  {
+  {    
      SelectStms : SelectStm*;
 	 UnionTypes : UnionType*;
   }
@@ -22,6 +22,10 @@ namespace Hql
 
   ast SelectStm
   {
+     in ContainingTable: TableScope;
+
+	 FromClause.ContainingTable = ContainingTable;
+
      FromClause   : FromClause?;
 	 SelectClause : SelectClause;
 	 WhereClause  : WhereClause?;
@@ -71,7 +75,9 @@ namespace Hql
 
   ast FromClause
   {
-    TableSources : TableSource*;
+    in ContainingTable: TableScope; 
+
+    TableSource : TableSource;
   }
 
   ast TableSource
@@ -82,8 +88,9 @@ namespace Hql
 
   abstract ast JoinPart
   {
-    | Join { JoinType : JoinType; RightTable : TableSource; Expression : LogicalExpression; }
-	| Link { TableNameFull : TableNameFull; }
+    | Join { JoinType : JoinType; TableSource : TableSource; Expression : LogicalExpression; }
+	| Link { TableSource : TableSource; }
+	| JoinList { TableSource : TableSource; }
   }
 
   abstract ast JoinType

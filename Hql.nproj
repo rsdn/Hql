@@ -39,6 +39,17 @@
     <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <MacroReference Include="Nitra.Compiler">
+      <Name>Nitra.Compiler</Name>
+      <AssemblyName>Nitra.Compiler.dll</AssemblyName>
+      <HintPath>..\Nitra\bin\Debug\Stage1\Nitra.Compiler.dll</HintPath>
+      <Private>False</Private>
+    </MacroReference>
+    <Reference Include="DotNetLang">
+      <Name>DotNetLang</Name>
+      <AssemblyName>DotNetLang.dll</AssemblyName>
+      <HintPath>..\Nitra\bin\Debug\Stage1\DotNetLang.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Nitra.Runtime">
       <Name>Nitra.Runtime</Name>
@@ -47,11 +58,20 @@
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>4</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>4</RequiredTargetFramework>
+    </Reference>
     <Reference Include="Nemerle">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(Nemerle)\Nemerle.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <MacroReference Include="Nemerle.Linq">
+      <HintPath>$(Nemerle)\Nemerle.Linq.dll</HintPath>
+    </MacroReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Hql-ast.nitra">
@@ -63,9 +83,22 @@
     <Compile Include="NitraHql.nitra">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TypingSupport\HqlDependentPropertyEvalContext.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TypingSupport\HqlProjectEvalPropertiesHost.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TypingSupport\ProjectData.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TypingSupport\ProjectSupport.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="TypingSupport" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-16"?>
 <Config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <ProjectSupport Caption="" TypeFullName="" Path="" />
+  <ProjectSupport Caption="Hql" TypeFullName="Hql.ProjectSupport" Path="..\..\bin\Debug\Hql.dll" />
   <Languages>
-    <Language Name="NitraHql" Path="..\..\bin\Debug\Hql.dll">
+    <Language Name="Hql" Path="..\..\bin\Debug\Hql.dll">
       <DynamicExtensions />
     </Language>
   </Languages>

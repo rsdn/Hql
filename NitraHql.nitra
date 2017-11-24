@@ -1,6 +1,6 @@
 ﻿using Hql;
 
-language NitraHql
+language Hql
 {
   //span class DateTime         { ForegroundColor=Maroon; }
 

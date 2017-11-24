@@ -46,35 +46,35 @@
     token Reference = !Keyword IdentifierBody { map Nitra.Declarations.Reference = Nitra.Declarations.Reference(this); }
     token Name      = !Keyword IdentifierBody { map Nitra.Declarations.Name      = Nitra.Declarations.Name(this); }
 
-	extend token IgnoreToken
+	  extend token IgnoreToken
     {
       | [SplitAtCompletionPosition] SpaceToken = Spaces;
     }
     
     // Literals
-    regex Digit                               = ['0'..'9'];
+    regex Digit                                = ['0'..'9'];
     [SpanClass(Number)]
-    regex IntegerLiteral                      = Digit+;
+    regex IntegerLiteral                       = Digit+;
     [SpanClass(Number)]
     regex FloatLiteral                         = Digit* "." Digit+;
     [ExplicitSpaces]
-	[SpanClass(Number)]
-    regex DateLiteral                         =   "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit "\""
-                                                | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit "'"
-                                                | "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit ":" Digit Digit "\""
-                                                | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit ":" Digit Digit "'" 
-                                                | "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit "\""
-                                                | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit "'";
+	  [SpanClass(Number)]
+    regex DateLiteral                          =   "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit "\""
+                                                  | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit "'"
+                                                  | "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit ":" Digit Digit "\""
+                                                  | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit ":" Digit Digit "'" 
+                                                  | "\"" Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit "\""
+                                                  | "'"  Digit Digit "." Digit Digit "." Digit Digit Digit Digit " " Digit Digit ":" Digit Digit "'";
     
-    regex SimpleDoubleEscapeSequence          = "\\\"" | "\\\\";
+    regex SimpleDoubleEscapeSequence           = "\\\"" | "\\\\";
 
-    regex SimpleSingleEscapeSequence          = "\\'" | "\\\\";
+    regex SimpleSingleEscapeSequence           = "\\'" | "\\\\";
     
-    regex NotAllowedDoubleStringLiteralChar   = NewLineCharacter | "\"" | "\\";
+    regex NotAllowedDoubleStringLiteralChar    = NewLineCharacter | "\"" | "\\";
 
-    regex NotAllowedSingleStringLiteralChar   = NewLineCharacter | "'" | "\\";    
+    regex NotAllowedSingleStringLiteralChar    = NewLineCharacter | "'" | "\\";    
 
-	[SpanClass(String)]
+	  [SpanClass(String)]
     token DoubleStringLiteralPart
     {
       | SimpleDoubleEscapeSequenceStrPart     = SimpleDoubleEscapeSequence;
@@ -165,192 +165,189 @@
          }
     }
 
-	syntax Delimiter
-	{
-	   | FullJoin = "^"
-	   | RightJoin = "->"
-	   | LeftJoin = "<-"
-	   | DefaultJoin = "."
-	}
+		syntax Delimiter
+		{
+	  	| FullJoin = "^"
+	   	| RightJoin = "->"
+	   	| LeftJoin = "<-"
+	    | DefaultJoin = "."
+	  }
 
-    syntax QualifiedIdentifier = (QualifiedIdentifierPart; s Delimiter s)+;
+  	syntax QualifiedIdentifier = (QualifiedIdentifierPart; s Delimiter s)+;
 
-	syntax QIPredicate = Delimiter s QualifiedIdentifierPart s Delimiter;
+		syntax QIPredicate = Delimiter s QualifiedIdentifierPart s Delimiter;
 
-	syntax TableLinkAndDelimiter = QualifiedIdentifierPart s TableDelimiter=((&QIPredicate Delimiter s)?);
+		syntax TableLinkAndDelimiter = QualifiedIdentifierPart s TableDelimiter=((&QIPredicate Delimiter s)?);
 
-	syntax TableLinkAndDelimiters = (TableLinkAndDelimiter)+;
+		syntax TableLinkAndDelimiters = (TableLinkAndDelimiter)+;
     
     [ExplicitSpaces]
-    syntax Field
-    {
-      | SingleField = QualifiedIdentifierPart;   
+  	syntax Field
+  	{
+    	| SingleField = QualifiedIdentifierPart;   
 
-    precedence TableLinkAndField:
-	    | TableLink = TableLinkAndDelimitersIn = (TableLinkAndDelimiter+) "." s Field = QualifiedIdentifierPart;	   
-      //| TableLink = Prefix = (QualifiedIdentifierPart s (&QIPredicate Delimiter s QualifiedIdentifierPart s)? (&QIPredicate Delimiter s)?)+ "." s Field = QualifiedIdentifierPart;	   
-    }
+    	precedence TableLinkAndField:
+	  	| TableLink = TableLinkAndDelimitersIn = (TableLinkAndDelimiter+) "." s Field = QualifiedIdentifierPart;	        
+  	}
 
-    syntax Alias = ("as" sm)? StringAlias = StringAlias;
+  	syntax Alias = ("as" sm)? StringAlias = StringAlias;
         
-    syntax Start = Query;
+  	syntax Start = Query;
 
-	syntax Query = (SelectStm; UnionType nl)*;
+		syntax Query = (SelectStm; UnionType nl)*;
 
-	syntax UnionType
-	{
-	  | Union = "union"
-	  | UnionAll = "union" sm "all"
-	}
+		syntax UnionType
+		{
+	  	| Union = "union"
+	  	| UnionAll = "union" sm "all"
+		}
        
-    syntax SelectStm = FromClause = FromClause? SelectClause WhereClause = WhereClause? GroupClause = GroupClause? OrderClause = OrderClause?;
+  	syntax SelectStm = FromClause = FromClause? SelectClause WhereClause = WhereClause? GroupClause = GroupClause? OrderClause = OrderClause?;
 
-    syntax SelectClause = SelectSpan="select" sm Distinct=(("distinct" sm)?) (Column; "," sm)+ nl;
+  	syntax SelectClause = SelectSpan="select" sm Distinct=(("distinct" sm)?) (Column; "," sm)+ nl;
 
-    syntax Column
-    {	
-       | AllTabAllFields = "*"
-       | OneTabAllFields = QualifiedIdentifier ".*"
+  	syntax Column
+  	{	
+    	| AllTabAllFields = "*"
+     	| OneTabAllFields = QualifiedIdentifier ".*"
 
-	  precedence Expr:
-	   | Expression
-       | ExpressionWithAlias = Expression Alias
-    }
+	   	precedence Expr:
+	   	| Expression
+     	| ExpressionWithAlias = Expression Alias
+  	}
   
-    syntax FromClause = "from" sm TableSource;
-
-	// syntax TableSources = (TableSource; ",")*;
+  	syntax FromClause = "from" sm TableSource;
 	
-	syntax TableSource
-	{
-	  | TableSourceItemJoined
-	  | TableSourceItemJoinedWithBrackets = "(" TableSourceItemJoined ")"
-	}
+		syntax TableSource
+		{
+	 	  | TableSourceItemJoined
+	  	| TableSourceItemJoinedWithBrackets = "(" TableSourceItemJoined ")"
+		}
 
-	syntax TableSourceItemJoined = TableSourceItem JoinPart*;
+		syntax TableSourceItemJoined = TableSourceItem JoinPart*;
 
-	syntax TableSourceItem
-	{
-      | SubQuery = SubQuery
-      | TableNameFull = TableNameFull nl
-    }
+		syntax TableSourceItem
+		{
+    	| SubQuery = SubQuery
+    	| TableNameFull = TableNameFull nl
+  	}
 
-	syntax JoinPart
-	{
-	   | Join = JoinType = JoinType sm "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
-	   | Link = "link" sm TableSource nl
-	   | List = "," sm TableSource nl
-	}
+		syntax JoinPart
+		{
+	  	| Join = JoinType = JoinType sm "join" sm RightTableSource=TableSource sm "on" sm LogicalExpression nl
+	  	| Link = "link" sm TableSource nl
+	  	| List = "," sm TableSource nl
+		}
     
-    syntax SubQuery = "(" Query ")" sm Alias sm;
+  	syntax SubQuery = "(" Query ")" sm Alias sm;
 
-    syntax TableNameFull = TableName=QualifiedIdentifier sm Alias=(Alias sm)?;
+  	syntax TableNameFull = TableName=QualifiedIdentifier sm Alias=(Alias sm)?;
 
-	syntax OuterJoinType
-	{
-	  | Left = "left"
-	  | Right = "right"
-	  | Full = "full"
-	}
+		syntax OuterJoinType
+		{
+	  	| Left = "left"
+	  	| Right = "right"
+	  	| Full = "full"
+		}
 
-    syntax JoinType
-    {
-      | Inner = "inner"?
-      | OuterJoin = OuterJoinType sm ("outer" sm)?
-    }
+  	syntax JoinType
+  	{
+    	| Inner = "inner"?
+    	| OuterJoin = OuterJoinType sm ("outer" sm)?
+  	}
 
-    syntax WhereClause = "where" sm LogicalExpression nl;
+  	syntax WhereClause = "where" sm LogicalExpression nl;
      
-    syntax HavingClause = "having" sm LogicalExpression nl;
+  	syntax HavingClause = "having" sm LogicalExpression nl;
 
-    syntax GroupClause = "group" "by" GroupList=(Expression; "," sm)+ nl HavingClause = HavingClause?;
+  	syntax GroupClause = "group" "by" GroupList=(Expression; "," sm)+ nl HavingClause = HavingClause?;
 
-    syntax OrderClause = "order" "by" OrderList=(OrderField; "," sm)+ nl;
+  	syntax OrderClause = "order" "by" OrderList=(OrderField; "," sm)+ nl;
 
-    syntax OrderField
-    {
-      | OrderAsc  = Expression sm "asc"?
-      | OrderDesc = Expression sm "desc"
-    }
+  	syntax OrderField
+  	{
+    	| OrderAsc  = Expression sm "asc"?
+    	| OrderDesc = Expression sm "desc"
+  	}
 
-    syntax MyValues
-    {
-      | QueryExpression    = "(" Query ")"
-      | BracketsExpression = "(" (Expression; "," sm)+ ")"
-    }       
+  	syntax MyValues
+  	{
+    	| QueryExpression    = "(" Query ")"
+    	| BracketsExpression = "(" (Expression; "," sm)+ ")"
+  	}       
 
-	regex ComparsionOperator = "=" | "<>" | "<=" | "<" | ">=" | ">";
+		regex ComparsionOperator = "=" | "<>" | "<=" | "<" | ">=" | ">";
 
-	syntax CaseCondition = "when" sm Condition=LogicalExpression sm "then" sm Then=Expression nl;
+		syntax CaseCondition = "when" sm Condition=LogicalExpression sm "then" sm Then=Expression nl;
 
-	syntax LogicalExpression
-	{
-	  | Braces         = "(" LogicalExpression ")"
+		syntax LogicalExpression
+		{
+	  	| Braces         = "(" LogicalExpression ")"
 
-	precedence Unary:
-      | ValueIsNotNull = Expression sm "is" sm "not" sm "null"
-      | ValueIsNull    = Expression sm "is" sm "null"
+	  	precedence Unary:
+    	| ValueIsNotNull = Expression sm "is" sm "not" sm "null"
+    	| ValueIsNull    = Expression sm "is" sm "null"
 
-    precedence Like:
-      | Like           = Expression sm "like" sm Expression
-      | NotLike        = Expression sm "not" sm "like" sm Expression
+    	precedence Like:
+    	| Like           = Expression sm "like" sm Expression
+    	| NotLike        = Expression sm "not" sm "like" sm Expression
 
-    precedence In:
-      | In             = Expression sm "in" sm MyValues
-      | NotIn          = Expression sm "not" sm "in" sm MyValues
+    	precedence In:
+    	| In             = Expression sm "in" sm MyValues
+    	| NotIn          = Expression sm "not" sm "in" sm MyValues
 
-    precedence Exists:
-	  | Exists         = "exists" sm "(" Query ")"
+    	precedence Exists:
+	  	| Exists         = "exists" sm "(" Query ")"
 
-	precedence Or:
-      | Or           =  LogicalExpression sm "or" nl LogicalExpression sm
+	  	precedence Or:
+    	| Or           =  LogicalExpression sm "or" nl LogicalExpression sm
   
-    precedence And:
-      | And          = LogicalExpression sm "and" nl LogicalExpression sm
+    	precedence And:
+    	| And          = LogicalExpression sm "and" nl LogicalExpression sm
     
-	precedence Not:
-	  | Not          = "not" sm LogicalExpression
+	  	precedence Not:
+	  	| Not          = "not" sm LogicalExpression
       
-    precedence Comparsion:
-	  | Equal        = Expression sm "=" sm Expression
-	  | NotEqual     = Expression sm "<>" sm Expression
-	  | LessEqual    = Expression sm "<=" sm Expression
-	  | Less         = Expression sm "<" sm Expression
-	  | GreaterEqual = Expression sm ">=" sm Expression
-	  | Greater      = Expression sm ">" sm Expression
-	}
+    	precedence Comparsion:
+	  	| Equal        = Expression sm "=" sm Expression
+	  	| NotEqual     = Expression sm "<>" sm Expression
+	  	| LessEqual    = Expression sm "<=" sm Expression
+	  	| Less         = Expression sm "<" sm Expression
+	  	| GreaterEqual = Expression sm ">=" sm Expression
+	  	| Greater      = Expression sm ">" sm Expression
+		}
 
-    syntax Expression
-    {
-      | Braces         = "(" Expression ")"
-      | Query          = "(" Query ")"      
+  	syntax Expression
+  	{
+    	| Braces         = "(" Expression ")"
+    	| Query          = "(" Query ")"      
 
-      | IntegerLiteral
-      | FloatLiteral
-      | StringLiteralRule
-      | DateLiteral    = "#" DateLiteral
+    	| IntegerLiteral
+    	| FloatLiteral
+    	| StringLiteralRule
+    	| DateLiteral    = "#" DateLiteral
            
-      | Null           = "null"
-      | Field          = Field
-      | Case           = "case" nl Conditions = (CaseCondition)+ Else = ("else" sm Expression = Expression nl)? "end" nl 
-      | CountAll       = "count" "(" "*" ")" 
-      | FunCall        = FuncName = Field "(" (Expression; "," sm)* ")"
+    	| Null           = "null"
+    	| Field          = Field
+    	| Case           = "case" nl Conditions = (CaseCondition)+ Else = ("else" sm Expression = Expression nl)? "end" nl 
+    	| CountAll       = "count" "(" "*" ")" 
+    	| FunCall        = FuncName = Field "(" (Expression; "," sm)* ")"
 
-    precedence Concat:      
-      | Concat       =  Expression sm "&" sm Expression
+    	precedence Concat:      
+    	| Concat       =  Expression sm "&" sm Expression
 
-    precedence Sum:
-      | Sum          = Expression sm "+"  sm Expression
-      | Sub          = Expression sm "-"  sm Expression
-      | Modulus      = Expression sm "%"  sm Expression
+    	precedence Sum:
+    	| Sum          = Expression sm "+"  sm Expression
+    	| Sub          = Expression sm "-"  sm Expression
+    	| Modulus      = Expression sm "%"  sm Expression
       
-    precedence Mul:
-      | Multiply     = Expression sm "*"  sm Expression
-      | Divide       = Expression sm "/"  sm Expression
+    	precedence Mul:
+    	| Multiply     = Expression sm "*"  sm Expression
+    	| Divide       = Expression sm "/"  sm Expression
       
-    precedence Unary:
-      | Plus          = "+" Expression
-      | Minus         = "-" Expression
-    }
+    	precedence Unary:
+    	| Plus          = "+" Expression
+    	| Minus         = "-" Expression
+  	}
   }
 }

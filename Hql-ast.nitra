@@ -1,4 +1,4 @@
-using Nitra;
+﻿using Nitra;
 using Nitra.Declarations;
 
 namespace Hql
@@ -11,26 +11,26 @@ namespace Hql
   ast Query
   {    
      SelectStms : SelectStm*;
-	 UnionTypes : UnionType*;
+	   UnionTypes : UnionType*;
   }
 
   abstract ast UnionType
   {
     | Union 
-	| UnionAll
+	  | UnionAll
   }
 
   ast SelectStm
   {
      in ContainingTable: TableScope;
 
-	 FromClause.ContainingTable = ContainingTable;
+	   FromClause.ContainingTable = ContainingTable;
 
      FromClause   : FromClause?;
-	 SelectClause : SelectClause;
-	 WhereClause  : WhereClause?;
-	 GroupClause  : GroupClause?;
-	 OrderClause  : OrderClause?;
+	   SelectClause : SelectClause;
+	   WhereClause  : WhereClause?;
+	   GroupClause  : GroupClause?;
+	   OrderClause  : OrderClause?;
   }  
 
   ast OrderClause
@@ -46,8 +46,8 @@ namespace Hql
 
   ast GroupClause
   {
-     Expressions : Expression*;
-	 HavingClause : HavingClause?;
+     Expressions  : Expression*;
+	   HavingClause : HavingClause?;
   }
 
   ast HavingClause
@@ -63,14 +63,14 @@ namespace Hql
   ast SelectClause
   {
      Distinct : bool;
-	 Columns : Column*;
+	   Columns : Column*;
   }
 
   abstract ast Column
   {
     | AllTabAllFields
-	| OneTabAllFields { TableName : QualifiedIdentifier; }
-	| ColumnExpressionWithAlias { Expression : Expression; Alias : Alias?; }
+	  | OneTabAllFields { TableName : QualifiedIdentifier; }
+	  | ColumnExpressionWithAlias { Expression : Expression; Alias : Alias?; }
   }
 
   ast FromClause
@@ -83,34 +83,34 @@ namespace Hql
   ast TableSource
   {     
      TableSourceItem : TableSourceItem; 
-	 JoinParts       : JoinPart*;
+	   JoinParts       : JoinPart*;
   }
 
   abstract ast JoinPart
   {
     | Join { JoinType : JoinType; TableSource : TableSource; Expression : LogicalExpression; }
-	| Link { TableSource : TableSource; }
-	| JoinList { TableSource : TableSource; }
+	  | Link { TableSource : TableSource; }
+	  | JoinList { TableSource : TableSource; }
   }
 
   abstract ast JoinType
   {
     | Inner
-	| Left
-	| Right
-	| Full
+	  | Left
+	  | Right
+	  | Full
   }
 
   abstract ast TableSourceItem
   {
      | SubQuery            { Query : Query; Alias : Alias; } 
-	 | TableSourceNameFull { TableNameFull : TableNameFull; }
+	   | TableSourceNameFull { TableNameFull : TableNameFull; }
   }
 
   ast TableNameFull
   {
      TableName : QualifiedIdentifier; 
-	 Alias     : Alias?;
+	   Alias     : Alias?;
   }
 
   ast Alias
@@ -121,19 +121,19 @@ namespace Hql
   abstract ast StringAlias
   {
       | StringAliasQualifiedIdentifierPart { QualifiedIdentifierPart : QualifiedIdentifierPart; }
-	  | StringAliasStringLiteral { StringLiteralRule : StringLiteralRule; }
+	    | StringAliasStringLiteral { StringLiteralRule : StringLiteralRule; }
   }
 
   abstract ast StringLiteralRule
   {
      | DoubleStringLiteralPartRule { Value : string; }
-	 | SingleStringLiteralPartRule { Value : string; }
+	   | SingleStringLiteralPartRule { Value : string; }
   }
 
   ast QualifiedIdentifier
   {
      QualifiedIdentifierParts : QualifiedIdentifierPart*;
-	 Delimiters               : Delimiter*;
+	   Delimiters               : Delimiter*;
   }
 
   ast QualifiedIdentifierPartHolder
@@ -149,15 +149,15 @@ namespace Hql
   abstract ast Delimiter
   {
     | FullJoinDelimiter
-	| RightJoinDelimiter
-	| LeftJoinDelimiter
-	| DefaultJoinDelimiter
+	  | RightJoinDelimiter
+	  | LeftJoinDelimiter
+	  | DefaultJoinDelimiter
   }
 
   abstract ast MyValues
   {
     | QueryExpression    { Query : Query;}
-	| BracketsExpression { Expressions : Expression*;}
+	  | BracketsExpression { Expressions : Expression*;}
   }
 
   abstract ast LogicalUnary : LogicalExpression
@@ -173,44 +173,44 @@ namespace Hql
   abstract ast LogicalBinary : LogicalExpression
   {
       Expr1 : LogicalExpression;
-	  Expr2 : LogicalExpression;
+	    Expr2 : LogicalExpression;
   }
 
   abstract ast ExpLogicalBinary : LogicalExpression
   {
-      Expr1 : Expression;
-	  Expr2 : Expression;
+     Expr1 : Expression;
+	   Expr2 : Expression;
   }
 
   abstract ast LogicalIn : LogicalExpression
   {
-      Expr  : Expression;
-	  Values : MyValues;
+     Expr   : Expression;
+	   Values : MyValues;
   }
 
   abstract ast LogicalExists : LogicalExpression
   {
-	 Query : Query;
+	   Query : Query;
   }
 
   abstract ast LogicalExpression
   {
     | ValueIsNotNull : ExpLogicalUnary
-	| ValueIsNull    : ExpLogicalUnary
-	| Like           : ExpLogicalBinary
-	| NotLike        : ExpLogicalBinary
-	| In             : LogicalIn
-	| NotIn          : LogicalIn
-	| Exists         : LogicalExists
-	| Or             : LogicalBinary
-	| And            : LogicalBinary
-	| Not            : LogicalUnary
-	| Equal          : ExpLogicalBinary
+	  | ValueIsNull    : ExpLogicalUnary
+	  | Like           : ExpLogicalBinary
+	  | NotLike        : ExpLogicalBinary
+	  | In             : LogicalIn
+	  | NotIn          : LogicalIn
+	  | Exists         : LogicalExists
+	  | Or             : LogicalBinary
+	  | And            : LogicalBinary
+	  | Not            : LogicalUnary
+	  | Equal          : ExpLogicalBinary
     | NotEqual       : ExpLogicalBinary
-	| LessEqual      : ExpLogicalBinary
-	| Less           : ExpLogicalBinary
-	| GreaterEqual   : ExpLogicalBinary
-	| Greater        : ExpLogicalBinary
+	  | LessEqual      : ExpLogicalBinary
+	  | Less           : ExpLogicalBinary
+	  | GreaterEqual   : ExpLogicalBinary
+	  | Greater        : ExpLogicalBinary
   }
 
   abstract ast Unary : Expression 
@@ -221,33 +221,33 @@ namespace Hql
   abstract ast Binary : Expression 
   { 
     Expr1 : Expression; 
-	Expr2 : Expression; 
+	  Expr2 : Expression; 
   }     
 
   abstract ast Field
   {
     | SingleField { FieldName : QualifiedIdentifierPart; }
-	| TableLinkField { TableLinks : TableLink*; FieldName : QualifiedIdentifierPart;}
+	  | TableLinkField { TableLinks : TableLink*; FieldName : QualifiedIdentifierPart;}
   }
 
   ast TableLink
   {
      LinkName : QualifiedIdentifierPart;
-	 LinkDelimiter : Delimiter?;
+	   LinkDelimiter : Delimiter?;
   }
 
   ast CaseCondition
   {
      Condition : LogicalExpression;
-	 Then      : Expression; 
+	   Then      : Expression; 
   }
   
   abstract ast Expression : BindableAst
   {
-      | IntegerLiteral    { Value : int; }
-      | FloatLiteral      { Value : double; }
-      | StringLiteralRule { Value : string; }
-      | DateLiteral       { Value : System.DateTime; }	  
+    | IntegerLiteral    { Value : int; }
+    | FloatLiteral      { Value : double; }
+    | StringLiteralRule { Value : string; }
+    | DateLiteral       { Value : System.DateTime; }	  
 	  | SubQueryExpression { Query : Query; }
 	  | Null
 	  | FieldExpression { Field : Field; }
@@ -264,4 +264,6 @@ namespace Hql
 	  | Plus : Unary
 	  | Minus : Unary
   }  
+
+  declaration Root : Container {}
 }

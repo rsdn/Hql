@@ -48,19 +48,18 @@ namespace Hql
 	   | Link -> Link { this.TableSource -> TableSource; } 
 	   | List -> JoinList { this.TableSource -> TableSource; } 
    }
-   
+
+   map syntax HqlSyntax.OuterJoinType -> JoinType
+   {
+		  | Left -> Left {}
+		  | Right -> Right {}
+		  | Full -> Full {}
+   }
+
    map syntax HqlSyntax.JoinType -> JoinType
    {
      | Inner -> Inner {}
-	   | OuterJoin 
-		   {
-		     match(this.OuterJoinType)
-		     {
-			    | Left -> Left {}
-			    | Right -> Right {}						  
-			    | Full -> Full {}
-		     }
-		   }
+	   | OuterJoin -> this
    }
 
    map syntax HqlSyntax.TableSourceItem -> TableSourceItem

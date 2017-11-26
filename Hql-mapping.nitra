@@ -222,7 +222,7 @@ namespace Hql
 	           this.Conditions -> Conditions; 
 			       match(this.Else)
 			       {
-			         | Some(value) -> Some(value.Item2)
+			         | Some((_, value)) -> Some(value)
 			         | None() -> None()
 			       } -> Else;
 			     }	         

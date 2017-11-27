@@ -51,7 +51,7 @@ namespace Hql
       project.Data
     }
 
-    public RefreshProject(cancellationToken : CancellationToken, files : ImmutableArray[FileEvalPropertiesData], data : object) : void
+    public RefreshProject(cancellationToken : CancellationToken, _files : ImmutableArray[FileEvalPropertiesData], data : object) : void
     {
       def (context, root) = data :> ProjectData;
       context.CancellationToken = cancellationToken;
